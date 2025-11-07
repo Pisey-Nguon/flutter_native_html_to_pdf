@@ -3,6 +3,9 @@ import UIKit
 import WebKit
 
 public class FlutterNativeHtmlToPdfPlugin: NSObject, FlutterPlugin {
+    static let WEBVIEW_TAG_FILE = 100
+    static let WEBVIEW_TAG_BYTES = 101
+    
     var wkWebView : WKWebView!
     var urlObservation: NSKeyValueObservation?
   public static func register(with registrar: FlutterPluginRegistrar) {
@@ -30,7 +33,7 @@ public class FlutterNativeHtmlToPdfPlugin: NSObject, FlutterPlugin {
         let viewControler = UIApplication.shared.delegate?.window?!.rootViewController
         wkWebView = WKWebView.init(frame: viewControler!.view.bounds)
         wkWebView.isHidden = true
-        wkWebView.tag = 100
+        wkWebView.tag = FlutterNativeHtmlToPdfPlugin.WEBVIEW_TAG_FILE
         viewControler?.view.addSubview(wkWebView)
         
         let htmlFileContent = FileHelper.getContent(from: htmlFilePath!) // get html content from file
@@ -41,7 +44,7 @@ public class FlutterNativeHtmlToPdfPlugin: NSObject, FlutterPlugin {
             DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) {
                 let convertedFileURL = PDFCreator.create(printFormatter: self.wkWebView.viewPrintFormatter())
                 let convertedFilePath = convertedFileURL.absoluteString.replacingOccurrences(of: "file://", with: "") // return generated pdf path
-                if let viewWithTag = viewControler?.view.viewWithTag(100) {
+                if let viewWithTag = viewControler?.view.viewWithTag(FlutterNativeHtmlToPdfPlugin.WEBVIEW_TAG_FILE) {
                     viewWithTag.removeFromSuperview() // remove hidden webview when pdf is generated
                     
                     // clear WKWebView cache
@@ -70,7 +73,7 @@ public class FlutterNativeHtmlToPdfPlugin: NSObject, FlutterPlugin {
         let viewControler = UIApplication.shared.delegate?.window?!.rootViewController
         wkWebView = WKWebView.init(frame: viewControler!.view.bounds)
         wkWebView.isHidden = true
-        wkWebView.tag = 101
+        wkWebView.tag = FlutterNativeHtmlToPdfPlugin.WEBVIEW_TAG_BYTES
         viewControler?.view.addSubview(wkWebView)
         
         wkWebView.loadHTMLString(html!, baseURL: Bundle.main.bundleURL) // load html into hidden webview
@@ -81,7 +84,7 @@ public class FlutterNativeHtmlToPdfPlugin: NSObject, FlutterPlugin {
                 let pdfData = PDFCreator.createBytes(printFormatter: self.wkWebView.viewPrintFormatter())
                 let flutterData = FlutterStandardTypedData(bytes: pdfData)
                 
-                if let viewWithTag = viewControler?.view.viewWithTag(101) {
+                if let viewWithTag = viewControler?.view.viewWithTag(FlutterNativeHtmlToPdfPlugin.WEBVIEW_TAG_BYTES) {
                     viewWithTag.removeFromSuperview() // remove hidden webview when pdf is generated
                     
                     // clear WKWebView cache

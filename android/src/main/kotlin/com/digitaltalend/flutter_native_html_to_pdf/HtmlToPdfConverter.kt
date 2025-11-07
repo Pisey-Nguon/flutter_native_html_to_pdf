@@ -100,9 +100,13 @@ class HtmlToPdfConverter {
                         try {
                             val file = File(filePath)
                             val bytes = file.readBytes()
-                            file.delete()
+                            val deleteSuccess = file.delete()
+                            if (!deleteSuccess) {
+                                android.util.Log.w("HtmlToPdfConverter", "Failed to delete temporary file: $filePath")
+                            }
                             callback.onSuccess(bytes)
                         } catch (e: Exception) {
+                            android.util.Log.e("HtmlToPdfConverter", "Error reading or deleting temporary PDF file", e)
                             callback.onFailure()
                         }
                     }
