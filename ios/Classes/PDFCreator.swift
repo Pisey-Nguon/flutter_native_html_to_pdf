@@ -35,6 +35,35 @@ class PDFCreator {
     }
     
     /**
+     Creates a PDF using the given print formatter and returns it as Data.
+     - returns: The generated PDF data.
+     */
+    class func createBytes(printFormatter: UIPrintFormatter) -> Data {
+        
+        // assign the print formatter to the print page renderer
+        let renderer = UIPrintPageRenderer()
+        renderer.addPrintFormatter(printFormatter, startingAtPageAt: 0)
+        
+        // assign paperRect and printableRect values
+        let page = CGRect(x: 0, y: 0, width: 595.2, height: 841.8) // A4, 72 dpi
+        renderer.setValue(page, forKey: "paperRect")
+        renderer.setValue(page, forKey: "printableRect")
+        
+        // create pdf context and draw each page
+        let pdfData = NSMutableData()
+        UIGraphicsBeginPDFContextToData(pdfData, .zero, nil)
+        
+        for i in 0..<renderer.numberOfPages {
+            UIGraphicsBeginPDFPage()
+            renderer.drawPage(at: i, in: UIGraphicsGetPDFContextBounds())
+        }
+        
+        UIGraphicsEndPDFContext();
+        
+        return pdfData as Data;
+    }
+    
+    /**
      Creates temporary PDF document URL
      */
     private class var createdFileURL: URL {

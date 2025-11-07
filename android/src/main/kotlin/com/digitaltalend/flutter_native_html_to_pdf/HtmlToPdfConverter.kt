@@ -18,6 +18,11 @@ class HtmlToPdfConverter {
         fun onFailure()
     }
 
+    interface BytesCallback {
+        fun onSuccess(pdfBytes: ByteArray)
+        fun onFailure()
+    }
+
     @SuppressLint("SetJavaScriptEnabled")
     fun convert(filePath: String, applicationContext: Context, callback: Callback) {
         val webView = WebView(applicationContext)
@@ -30,6 +35,21 @@ class HtmlToPdfConverter {
             override fun onPageFinished(view: WebView, url: String) {
                 super.onPageFinished(view, url)
                 createPdfFromWebView(webView, applicationContext, callback)
+            }
+        }
+    }
+
+    @SuppressLint("SetJavaScriptEnabled")
+    fun convertToBytes(html: String, applicationContext: Context, callback: BytesCallback) {
+        val webView = WebView(applicationContext)
+        webView.settings.javaScriptEnabled = true
+        webView.settings.javaScriptCanOpenWindowsAutomatically = true
+        webView.settings.allowFileAccess = true
+        webView.loadDataWithBaseURL(null, html, "text/HTML", "UTF-8", null)
+        webView.webViewClient = object : WebViewClient() {
+            override fun onPageFinished(view: WebView, url: String) {
+                super.onPageFinished(view, url)
+                createPdfBytesFromWebView(webView, applicationContext, callback)
             }
         }
     }
@@ -61,8 +81,43 @@ class HtmlToPdfConverter {
         }
     }
 
+    fun createPdfBytesFromWebView(webView: WebView, applicationContext: Context, callback: BytesCallback) {
+        val path = applicationContext.cacheDir
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
+
+            val attributes = PrintAttributes.Builder()
+                .setMediaSize(PrintAttributes.MediaSize.ISO_A4)
+                .setResolution(PrintAttributes.Resolution("pdf", "pdf", 600, 600))
+                .setMinMargins(PrintAttributes.Margins.NO_MARGINS).build()
+
+            val printer = PdfPrinter(attributes)
+
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+                val adapter = webView.createPrintDocumentAdapter(temporaryDocumentName)
+
+                printer.print(adapter, path, temporaryBytesFileName, object : PdfPrinter.Callback {
+                    override fun onSuccess(filePath: String) {
+                        try {
+                            val file = File(filePath)
+                            val bytes = file.readBytes()
+                            file.delete()
+                            callback.onSuccess(bytes)
+                        } catch (e: Exception) {
+                            callback.onFailure()
+                        }
+                    }
+
+                    override fun onFailure() {
+                        callback.onFailure()
+                    }
+                })
+            }
+        }
+    }
+
     companion object {
         const val temporaryDocumentName = "TemporaryDocumentName"
         const val temporaryFileName = "TemporaryDocumentFile.pdf"
+        const val temporaryBytesFileName = "TemporaryBytesFile.pdf"
     }
 }
