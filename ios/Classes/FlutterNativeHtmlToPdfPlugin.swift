@@ -46,7 +46,12 @@ public class FlutterNativeHtmlToPdfPlugin: NSObject, FlutterPlugin, WKNavigation
         
         // !!! this is workaround for issue with rendering PDF images on iOS !!!
         let viewControler = UIApplication.shared.delegate?.window?!.rootViewController
-        wkWebView = WKWebView.init(frame: viewControler!.view.bounds)
+        
+        // Create WebView configuration with settings for loading external resources
+        let configuration = WKWebViewConfiguration()
+        configuration.preferences.javaScriptEnabled = true
+        
+        wkWebView = WKWebView.init(frame: viewControler!.view.bounds, configuration: configuration)
         wkWebView.navigationDelegate = self
         wkWebView.isHidden = true
         wkWebView.tag = FlutterNativeHtmlToPdfPlugin.WEBVIEW_TAG_FILE
@@ -73,7 +78,12 @@ public class FlutterNativeHtmlToPdfPlugin: NSObject, FlutterPlugin, WKNavigation
         
         // !!! this is workaround for issue with rendering PDF images on iOS !!!
         let viewControler = UIApplication.shared.delegate?.window?!.rootViewController
-        wkWebView = WKWebView.init(frame: viewControler!.view.bounds)
+        
+        // Create WebView configuration with settings for loading external resources
+        let configuration = WKWebViewConfiguration()
+        configuration.preferences.javaScriptEnabled = true
+        
+        wkWebView = WKWebView.init(frame: viewControler!.view.bounds, configuration: configuration)
         wkWebView.navigationDelegate = self
         wkWebView.isHidden = true
         wkWebView.tag = FlutterNativeHtmlToPdfPlugin.WEBVIEW_TAG_BYTES
@@ -84,12 +94,45 @@ public class FlutterNativeHtmlToPdfPlugin: NSObject, FlutterPlugin, WKNavigation
     
     // WKNavigationDelegate method - called when navigation finishes
     public func webView(_ webView: WKWebView, didFinish navigation: WKNavigation!) {
-        // Add a small delay to ensure rendering is complete
-        DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) {
-            if self.isGeneratingBytes {
-                self.generatePdfBytes()
-            } else {
-                self.generatePdfFile()
+        // Use JavaScript to wait for all images to load
+        let script = """
+        (function() {
+            return new Promise(function(resolve) {
+                var images = document.getElementsByTagName('img');
+                if (images.length === 0) {
+                    resolve('no-images');
+                    return;
+                }
+                var loadedCount = 0;
+                var totalImages = images.length;
+                
+                function checkAllLoaded() {
+                    loadedCount++;
+                    if (loadedCount >= totalImages) {
+                        resolve('all-loaded');
+                    }
+                }
+                
+                for (var i = 0; i < images.length; i++) {
+                    if (images[i].complete) {
+                        checkAllLoaded();
+                    } else {
+                        images[i].addEventListener('load', checkAllLoaded);
+                        images[i].addEventListener('error', checkAllLoaded);
+                    }
+                }
+            });
+        })();
+        """
+        
+        webView.evaluateJavaScript(script) { (result, error) in
+            // Small delay to ensure rendering is complete after images load
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
+                if self.isGeneratingBytes {
+                    self.generatePdfBytes()
+                } else {
+                    self.generatePdfFile()
+                }
             }
         }
     }

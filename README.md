@@ -91,3 +91,60 @@ print('PDF size: ${pdfBytes?.length} bytes');
 ## Note
 
 The HTML content can be static or dynamic. You can use any valid HTML, including CSS styles and images.
+
+### Using Images in HTML
+
+This plugin supports loading images in your HTML content, including:
+- **External images** via HTTP/HTTPS URLs (e.g., `https://example.com/image.jpg`)
+- **Base64 encoded images** (e.g., `data:image/png;base64,...`)
+- **Local file images** (with proper file:// URLs)
+
+**Important Configuration for External Images:**
+
+#### Android
+Add the INTERNET permission to your `android/app/src/main/AndroidManifest.xml`:
+
+```xml
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+    <uses-permission android:name="android.permission.INTERNET" />
+    
+    <application>
+        ...
+    </application>
+</manifest>
+```
+
+#### iOS
+Add App Transport Security settings to your `ios/Runner/Info.plist`:
+
+```xml
+<key>NSAppTransportSecurity</key>
+<dict>
+    <key>NSAllowsArbitraryLoads</key>
+    <true/>
+</dict>
+```
+
+**Example HTML with images:**
+
+```dart
+const htmlContent = """
+<!DOCTYPE html>
+<html>
+<head>
+    <title>PDF with Images</title>
+</head>
+<body>
+    <h1>My Document</h1>
+    <img src="https://picsum.photos/200/300" alt="Sample image">
+    <p>Image from URL</p>
+</body>
+</html>
+""";
+```
+
+**Note:** The plugin automatically waits for images to load before generating the PDF. For optimal results with external images:
+- Ensure you have a stable internet connection
+- The plugin uses JavaScript to detect when all images have finished loading (either successfully or with errors)
+- Only a minimal 300ms delay is added after image loading for final rendering
+- For faster generation, consider using base64 encoded images or local assets
