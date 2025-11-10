@@ -6,6 +6,7 @@ This is a Flutter plugin that converts HTML content into a PDF file or PDF bytes
 
 - **HTML to PDF File Conversion**: Convert HTML content into a PDF file and save it to a specified directory
 - **HTML to PDF Bytes Conversion**: Convert HTML content directly to `Uint8List` PDF data without saving to a file (better performance)
+- **Customizable Page Sizes**: Support for A4, Letter, Legal, A3, A5, Tabloid, and custom page sizes
 - **Cross-platform Support**: Works on Android, iOS, Windows, and Linux
 
 ## Usage
@@ -39,7 +40,7 @@ final pdfFile = await plugin.convertHtmlToPdf(
 print('PDF saved at: ${pdfFile?.path}');
 ```
 
-### Convert HTML to PDF Bytes (New!)
+### Convert HTML to PDF Bytes
 
 For better performance when you don't need to save the PDF as a file:
 
@@ -69,6 +70,49 @@ print('PDF size: ${pdfBytes?.length} bytes');
 // Or save to file if needed:
 // await File('path/to/file.pdf').writeAsBytes(pdfBytes!);
 ```
+
+### Custom Page Sizes
+
+You can specify different page sizes for your PDFs. The plugin supports common page sizes and custom dimensions:
+
+```dart
+import 'package:flutter_native_html_to_pdf/flutter_native_html_to_pdf.dart';
+import 'package:flutter_native_html_to_pdf/pdf_page_size.dart';
+import 'package:path_provider/path_provider.dart';
+
+final plugin = FlutterNativeHtmlToPdf();
+
+// Use a predefined page size
+Directory appDocDir = await getApplicationDocumentsDirectory();
+final pdfFile = await plugin.convertHtmlToPdf(
+  html: htmlContent,
+  targetDirectory: appDocDir.path,
+  targetName: "my_document",
+  pageSize: PdfPageSize.letter, // US Letter size
+);
+
+// Or create a custom page size (dimensions in points, 72 points = 1 inch)
+final customPageSize = PdfPageSize.custom(
+  width: 500,
+  height: 700,
+  name: 'My Custom Size',
+);
+
+final pdfBytes = await plugin.convertHtmlToPdfBytes(
+  html: htmlContent,
+  pageSize: customPageSize,
+);
+```
+
+**Available predefined page sizes:**
+- `PdfPageSize.a4` - A4 (210mm x 297mm) - Default
+- `PdfPageSize.letter` - US Letter (8.5" x 11")
+- `PdfPageSize.legal` - US Legal (8.5" x 14")
+- `PdfPageSize.a3` - A3 (297mm x 420mm)
+- `PdfPageSize.a5` - A5 (148mm x 210mm)
+- `PdfPageSize.tabloid` - US Tabloid (11" x 17")
+
+**Note:** If no page size is specified, the default is A4.
 
 ## Benefits of Using Bytes Method
 

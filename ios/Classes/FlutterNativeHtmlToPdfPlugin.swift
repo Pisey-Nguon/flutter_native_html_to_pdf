@@ -9,6 +9,7 @@ public class FlutterNativeHtmlToPdfPlugin: NSObject, FlutterPlugin, WKNavigation
     var wkWebView : WKWebView!
     var urlObservation: NSKeyValueObservation?
     var currentResult: FlutterResult?
+    var currentPageSize: [String: Any]?
     var isGeneratingBytes: Bool = false
     var isProcessing: Bool = false
     
@@ -38,9 +39,11 @@ public class FlutterNativeHtmlToPdfPlugin: NSObject, FlutterPlugin, WKNavigation
         
         let args = call.arguments as? [String: Any]
         let htmlFilePath = args!["htmlFilePath"] as? String
+        let pageSize = args?["pageSize"] as? [String: Any]
         
-        // Store the result callback
+        // Store the result callback and pageSize
         currentResult = result
+        currentPageSize = pageSize
         isGeneratingBytes = false
         isProcessing = true
         
@@ -77,9 +80,11 @@ public class FlutterNativeHtmlToPdfPlugin: NSObject, FlutterPlugin, WKNavigation
         
         let args = call.arguments as? [String: Any]
         let html = args!["html"] as? String
+        let pageSize = args?["pageSize"] as? [String: Any]
         
-        // Store the result callback
+        // Store the result callback and pageSize
         currentResult = result
+        currentPageSize = pageSize
         isGeneratingBytes = true
         isProcessing = true
         
@@ -195,7 +200,7 @@ public class FlutterNativeHtmlToPdfPlugin: NSObject, FlutterPlugin, WKNavigation
             return
         }
         
-        let pdfData = PDFCreator.createBytes(printFormatter: webView.viewPrintFormatter())
+        let pdfData = PDFCreator.createBytes(printFormatter: webView.viewPrintFormatter(), pageSize: currentPageSize)
         let flutterData = FlutterStandardTypedData(bytes: pdfData)
         
         if let viewWithTag = viewControler.view.viewWithTag(FlutterNativeHtmlToPdfPlugin.WEBVIEW_TAG_BYTES) {
@@ -216,6 +221,7 @@ public class FlutterNativeHtmlToPdfPlugin: NSObject, FlutterPlugin, WKNavigation
         self.wkWebView = nil
         self.isGeneratingBytes = false
         self.isProcessing = false
+        self.currentPageSize = nil
         
         // Return the result
         if let result = self.currentResult {
@@ -239,7 +245,7 @@ public class FlutterNativeHtmlToPdfPlugin: NSObject, FlutterPlugin, WKNavigation
             return
         }
         
-        let convertedFileURL = PDFCreator.create(printFormatter: webView.viewPrintFormatter())
+        let convertedFileURL = PDFCreator.create(printFormatter: webView.viewPrintFormatter(), pageSize: currentPageSize)
         let convertedFilePath = convertedFileURL.absoluteString.replacingOccurrences(of: "file://", with: "")
         
         if let viewWithTag = viewControler.view.viewWithTag(FlutterNativeHtmlToPdfPlugin.WEBVIEW_TAG_FILE) {
@@ -260,6 +266,7 @@ public class FlutterNativeHtmlToPdfPlugin: NSObject, FlutterPlugin, WKNavigation
         self.urlObservation = nil
         self.wkWebView = nil
         self.isProcessing = false
+        self.currentPageSize = nil
         
         // Return the result
         if let result = self.currentResult {

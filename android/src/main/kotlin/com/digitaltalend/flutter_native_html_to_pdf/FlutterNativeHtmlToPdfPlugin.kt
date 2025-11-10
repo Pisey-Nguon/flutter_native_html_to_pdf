@@ -45,6 +45,7 @@ class FlutterNativeHtmlToPdfPlugin: FlutterPlugin, MethodCallHandler {
   
   private fun convertHtmlToPdf(call: MethodCall, result: Result) {
     val htmlFilePath = call.argument<String>("htmlFilePath")
+    val pageSize = call.argument<Map<String, Any>>("pageSize")
 
     HtmlToPdfConverter().convert(htmlFilePath!!, context, object : HtmlToPdfConverter.Callback {
       override fun onSuccess(filePath: String) {
@@ -54,11 +55,12 @@ class FlutterNativeHtmlToPdfPlugin: FlutterPlugin, MethodCallHandler {
       override fun onFailure() {
         result.error("ERROR", "Unable to convert html to pdf document!", "")
       }
-    })
+    }, pageSize)
   }
 
   private fun convertHtmlToPdfBytes(call: MethodCall, result: Result) {
     val html = call.argument<String>("html")
+    val pageSize = call.argument<Map<String, Any>>("pageSize")
 
     HtmlToPdfConverter().convertToBytes(html!!, context, object : HtmlToPdfConverter.BytesCallback {
       override fun onSuccess(pdfBytes: ByteArray) {
@@ -68,7 +70,7 @@ class FlutterNativeHtmlToPdfPlugin: FlutterPlugin, MethodCallHandler {
       override fun onFailure() {
         result.error("ERROR", "Unable to convert html to pdf bytes!", "")
       }
-    })
+    }, pageSize)
   }
   
   override fun onDetachedFromEngine(binding: FlutterPlugin.FlutterPluginBinding) {
