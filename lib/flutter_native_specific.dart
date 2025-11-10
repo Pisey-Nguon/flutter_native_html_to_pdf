@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'dart:typed_data';
 
 import 'package:htmltopdfwidgets/htmltopdfwidgets.dart';
 
@@ -18,5 +19,18 @@ class FlutterNativeSpecific {
           return widgets;
         }));
     return await file.writeAsBytes(await newpdf.save());
+  }
+
+  Future<Uint8List?> convertToBytes({
+    required String html,
+  }) async {
+    final newpdf = Document();
+    List<Widget> widgets = await HTMLToPdf().convert(html);
+    newpdf.addPage(MultiPage(
+        maxPages: 200,
+        build: (context) {
+          return widgets;
+        }));
+    return await newpdf.save();
   }
 }

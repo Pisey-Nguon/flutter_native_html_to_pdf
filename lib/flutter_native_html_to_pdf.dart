@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'dart:typed_data';
 
 import 'flutter_native_html_to_pdf_platform_interface.dart';
 
@@ -13,5 +14,10 @@ class FlutterNativeHtmlToPdf {
     );
   }
 
+  Future<Uint8List?> convertHtmlToPdfBytes({required String html}) async {
+    return FlutterNativeHtmlToPdfPlatform.instance.convertHtmlToPdfBytes(
+      html: html,
+    );
+  }
 
 }

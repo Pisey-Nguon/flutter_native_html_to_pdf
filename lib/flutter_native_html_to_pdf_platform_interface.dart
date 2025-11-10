@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'dart:typed_data';
 
 import 'package:plugin_platform_interface/plugin_platform_interface.dart';
 
@@ -32,5 +33,11 @@ abstract class FlutterNativeHtmlToPdfPlatform extends PlatformInterface {
  required String targetDirectory, required String targetName
   }) {
     throw UnimplementedError('convertHtmlToPdf() has not been implemented.');
+  }
+
+  Future<Uint8List?> convertHtmlToPdfBytes({
+    required String html,
+  }) {
+    throw UnimplementedError('convertHtmlToPdfBytes() has not been implemented.');
   }
 }
