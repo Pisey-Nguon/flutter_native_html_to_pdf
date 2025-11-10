@@ -4,6 +4,7 @@ import 'dart:typed_data';
 import 'package:plugin_platform_interface/plugin_platform_interface.dart';
 
 import 'flutter_native_html_to_pdf_method_channel.dart';
+import 'pdf_page_size.dart';
 
 abstract class FlutterNativeHtmlToPdfPlatform extends PlatformInterface {
   /// Constructs a FlutterNativeHtmlToPdfPlatform.
@@ -30,13 +31,16 @@ abstract class FlutterNativeHtmlToPdfPlatform extends PlatformInterface {
 
   Future<File?> convertHtmlToPdf({
     required String html,
- required String targetDirectory, required String targetName
+    required String targetDirectory,
+    required String targetName,
+    PdfPageSize? pageSize,
   }) {
     throw UnimplementedError('convertHtmlToPdf() has not been implemented.');
   }
 
   Future<Uint8List?> convertHtmlToPdfBytes({
     required String html,
+    PdfPageSize? pageSize,
   }) {
     throw UnimplementedError('convertHtmlToPdfBytes() has not been implemented.');
   }

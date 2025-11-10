@@ -27,7 +27,7 @@ class HtmlToPdfConverter {
     }
 
     @SuppressLint("SetJavaScriptEnabled")
-    fun convert(filePath: String, applicationContext: Context, callback: Callback) {
+    fun convert(filePath: String, applicationContext: Context, callback: Callback, pageSize: Map<String, Any>? = null) {
         val webView = WebView(applicationContext)
         val htmlContent = File(filePath).readText(Charsets.UTF_8)
         
@@ -92,7 +92,7 @@ class HtmlToPdfConverter {
                 ) { result ->
                     // Small delay to ensure rendering is complete after images load
                     Handler(Looper.getMainLooper()).postDelayed({
-                        createPdfFromWebView(webView, applicationContext, callback)
+                        createPdfFromWebView(webView, applicationContext, callback, pageSize)
                     }, 300)
                 }
             }
@@ -100,7 +100,7 @@ class HtmlToPdfConverter {
     }
 
     @SuppressLint("SetJavaScriptEnabled")
-    fun convertToBytes(html: String, applicationContext: Context, callback: BytesCallback) {
+    fun convertToBytes(html: String, applicationContext: Context, callback: BytesCallback, pageSize: Map<String, Any>? = null) {
         val webView = WebView(applicationContext)
         
         // Configure WebView settings
@@ -164,19 +164,31 @@ class HtmlToPdfConverter {
                 ) { result ->
                     // Small delay to ensure rendering is complete after images load
                     Handler(Looper.getMainLooper()).postDelayed({
-                        createPdfBytesFromWebView(webView, applicationContext, callback)
+                        createPdfBytesFromWebView(webView, applicationContext, callback, pageSize)
                     }, 300)
                 }
             }
         }
     }
 
-    fun createPdfFromWebView(webView: WebView, applicationContext: Context, callback: Callback) {
+    fun createPdfFromWebView(webView: WebView, applicationContext: Context, callback: Callback, pageSize: Map<String, Any>? = null) {
         val path = applicationContext.filesDir
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
 
+            // Get page size from parameter or use default A4
+            val mediaSize = if (pageSize != null) {
+                val width = (pageSize["width"] as? Double)?.toInt() ?: 595
+                val height = (pageSize["height"] as? Double)?.toInt() ?: 842
+                // Convert points to mils (1 point = 1000 mils / 72)
+                val widthMils = (width * 1000.0 / 72.0).toInt()
+                val heightMils = (height * 1000.0 / 72.0).toInt()
+                PrintAttributes.MediaSize("custom", "Custom", widthMils, heightMils)
+            } else {
+                PrintAttributes.MediaSize.ISO_A4
+            }
+
             val attributes = PrintAttributes.Builder()
-                .setMediaSize(PrintAttributes.MediaSize.ISO_A4)
+                .setMediaSize(mediaSize)
                 .setResolution(PrintAttributes.Resolution("pdf", "pdf", 600, 600))
                 .setMinMargins(PrintAttributes.Margins.NO_MARGINS).build()
 
@@ -198,12 +210,24 @@ class HtmlToPdfConverter {
         }
     }
 
-    fun createPdfBytesFromWebView(webView: WebView, applicationContext: Context, callback: BytesCallback) {
+    fun createPdfBytesFromWebView(webView: WebView, applicationContext: Context, callback: BytesCallback, pageSize: Map<String, Any>? = null) {
         val path = applicationContext.cacheDir
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
 
+            // Get page size from parameter or use default A4
+            val mediaSize = if (pageSize != null) {
+                val width = (pageSize["width"] as? Double)?.toInt() ?: 595
+                val height = (pageSize["height"] as? Double)?.toInt() ?: 842
+                // Convert points to mils (1 point = 1000 mils / 72)
+                val widthMils = (width * 1000.0 / 72.0).toInt()
+                val heightMils = (height * 1000.0 / 72.0).toInt()
+                PrintAttributes.MediaSize("custom", "Custom", widthMils, heightMils)
+            } else {
+                PrintAttributes.MediaSize.ISO_A4
+            }
+
             val attributes = PrintAttributes.Builder()
-                .setMediaSize(PrintAttributes.MediaSize.ISO_A4)
+                .setMediaSize(mediaSize)
                 .setResolution(PrintAttributes.Resolution("pdf", "pdf", 600, 600))
                 .setMinMargins(PrintAttributes.Margins.NO_MARGINS).build()
 

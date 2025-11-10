@@ -4,16 +4,22 @@ class PDFCreator {
     
     /**
      Creates a PDF using the given print formatter and saves it to the user's document directory.
+     - parameter printFormatter: The print formatter to use for creating the PDF
+     - parameter pageSize: Optional dictionary containing 'width' and 'height' in points
      - returns: The generated PDF path.
      */
-    class func create(printFormatter: UIPrintFormatter) -> URL {
+    class func create(printFormatter: UIPrintFormatter, pageSize: [String: Any]? = nil) -> URL {
         
         // assign the print formatter to the print page renderer
         let renderer = UIPrintPageRenderer()
         renderer.addPrintFormatter(printFormatter, startingAtPageAt: 0)
         
+        // Get page dimensions from pageSize parameter or use default A4
+        let width = pageSize?["width"] as? Double ?? 595.2
+        let height = pageSize?["height"] as? Double ?? 841.8
+        
         // assign paperRect and printableRect values
-        let page = CGRect(x: 0, y: 0, width: 595.2, height: 841.8) // A4, 72 dpi
+        let page = CGRect(x: 0, y: 0, width: width, height: height)
         renderer.setValue(page, forKey: "paperRect")
         renderer.setValue(page, forKey: "printableRect")
         
@@ -36,16 +42,22 @@ class PDFCreator {
     
     /**
      Creates a PDF using the given print formatter and returns it as Data.
+     - parameter printFormatter: The print formatter to use for creating the PDF
+     - parameter pageSize: Optional dictionary containing 'width' and 'height' in points
      - returns: The generated PDF data.
      */
-    class func createBytes(printFormatter: UIPrintFormatter) -> Data {
+    class func createBytes(printFormatter: UIPrintFormatter, pageSize: [String: Any]? = nil) -> Data {
         
         // assign the print formatter to the print page renderer
         let renderer = UIPrintPageRenderer()
         renderer.addPrintFormatter(printFormatter, startingAtPageAt: 0)
         
+        // Get page dimensions from pageSize parameter or use default A4
+        let width = pageSize?["width"] as? Double ?? 595.2
+        let height = pageSize?["height"] as? Double ?? 841.8
+        
         // assign paperRect and printableRect values
-        let page = CGRect(x: 0, y: 0, width: 595.2, height: 841.8) // A4, 72 dpi
+        let page = CGRect(x: 0, y: 0, width: width, height: height)
         renderer.setValue(page, forKey: "paperRect")
         renderer.setValue(page, forKey: "printableRect")
         
