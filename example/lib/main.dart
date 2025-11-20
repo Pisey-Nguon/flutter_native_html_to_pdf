@@ -288,15 +288,9 @@ class _MyAppState extends State<MyApp> {
                       );
                       
                       print('Sharing PDF file: $generatedPdfFilePath');
-                      final result = await Share.shareUri(
-                        Uri.file(generatedPdfFilePath!),
-                        sharePositionOrigin: Rect.fromLTWH(
-                          0,
-                          0,
-                          MediaQuery.of(context).size.width,
-                          MediaQuery.of(context).size.height / 2,
-                        ),
-                      );
+                      final result = await SharePlus.instance.share(ShareParams(
+                        uri: Uri.file(generatedPdfFilePath!),
+                      ));
                       print('Share completed with status: ${result.status}');
                     } else {
                       print('ERROR: Failed to generate PDF file');
@@ -348,16 +342,9 @@ class _MyAppState extends State<MyApp> {
                       final tempFile = File('${tempDir.path}/temp_pdf_from_bytes.pdf');
                       await tempFile.writeAsBytes(generatedPdfBytes!);
                       print('Temp file created at: ${tempFile.path}');
-                      
-                      final result = await Share.shareUri(
-                        Uri.file(tempFile.path),
-                        sharePositionOrigin: Rect.fromLTWH(
-                          0,
-                          0,
-                          MediaQuery.of(context).size.width,
-                          MediaQuery.of(context).size.height / 2,
-                        ),
-                      );
+                      final result = await SharePlus.instance.share(ShareParams(
+                        uri: Uri.file(tempFile.path),
+                      ));
                       print('Share completed with status: ${result.status}');
                     } else {
                       print('ERROR: Still no PDF bytes after regeneration');
