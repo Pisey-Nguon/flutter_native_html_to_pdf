@@ -288,11 +288,10 @@ class _MyAppState extends State<MyApp> {
                       );
                       
                       print('Sharing PDF file: $generatedPdfFilePath');
-                      await Share.shareXFiles(
-                        [XFile(generatedPdfFilePath!)],
-                        text: 'This is pdf file with ${selectedPageSize.name} size',
-                      );
-                      print('Share completed');
+                      final result = await SharePlus.instance.share(ShareParams(
+                        uri: Uri.file(generatedPdfFilePath!),
+                      ));
+                      print('Share completed with status: ${result.status}');
                     } else {
                       print('ERROR: Failed to generate PDF file');
                       Fluttertoast.showToast(
@@ -343,12 +342,10 @@ class _MyAppState extends State<MyApp> {
                       final tempFile = File('${tempDir.path}/temp_pdf_from_bytes.pdf');
                       await tempFile.writeAsBytes(generatedPdfBytes!);
                       print('Temp file created at: ${tempFile.path}');
-                      
-                      await Share.shareXFiles(
-                        [XFile(tempFile.path)],
-                        text: 'This PDF was generated from bytes with ${selectedPageSize.name} size!',
-                      );
-                      print('Share completed');
+                      final result = await SharePlus.instance.share(ShareParams(
+                        uri: Uri.file(tempFile.path),
+                      ));
+                      print('Share completed with status: ${result.status}');
                     } else {
                       print('ERROR: Still no PDF bytes after regeneration');
                       Fluttertoast.showToast(

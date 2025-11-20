@@ -29,7 +29,7 @@ dependencies:
   # Use with the CupertinoIcons class for iOS style icons.
   cupertino_icons: ^1.0.8
   path_provider: ^2.1.5
-  share_plus: ^10.1.2
+  share_plus: ^12.0.1
   fluttertoast: ^8.2.8
 
 
