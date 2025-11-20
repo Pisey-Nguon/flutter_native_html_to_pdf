@@ -111,6 +111,18 @@ public class FlutterNativeHtmlToPdfPlugin: NSObject, FlutterPlugin, WKNavigation
         }
     }
     
+    // WKNavigationDelegate method - called to decide policy for navigation action
+    public func webView(_ webView: WKWebView, decidePolicyFor navigationAction: WKNavigationAction, decisionHandler: @escaping (WKNavigationActionPolicy) -> Void) {
+        // Allow all navigation actions for HTML loading
+        decisionHandler(.allow)
+    }
+    
+    // WKNavigationDelegate method - called to decide policy for navigation response
+    public func webView(_ webView: WKWebView, decidePolicyFor navigationResponse: WKNavigationResponse, decisionHandler: @escaping (WKNavigationResponsePolicy) -> Void) {
+        // Allow all navigation responses
+        decisionHandler(.allow)
+    }
+    
     // WKNavigationDelegate method - called when navigation finishes
     public func webView(_ webView: WKWebView, didFinish navigation: WKNavigation!) {
         // Use JavaScript to wait for all images to load
