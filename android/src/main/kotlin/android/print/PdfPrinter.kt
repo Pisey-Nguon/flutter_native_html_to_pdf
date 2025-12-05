@@ -38,6 +38,7 @@ class PdfPrinter(private val printAttributes: PrintAttributes) {
 
                                     if (pages.isEmpty()) {
                                         callback.onFailure()
+                                        return
                                     }
 
                                     File(path, fileName).let {
