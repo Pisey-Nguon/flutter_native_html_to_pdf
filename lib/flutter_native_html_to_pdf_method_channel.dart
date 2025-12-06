@@ -64,7 +64,8 @@ class MethodChannelFlutterNativeHtmlToPdf
     return pdfBytes;
   }
 
-  /// Assumes the invokeMethod call will return successfully
+  /// Converts HTML file to PDF and returns the file path
+  /// Throws an exception if the native platform returns null
   Future<String> _convertFromHtmlFilePath(
     String htmlFilePath,
     PdfPageSize? pageSize,
@@ -76,10 +77,18 @@ class MethodChannelFlutterNativeHtmlToPdf
       args['pageSize'] = pageSize.toMap();
     }
     final result = await methodChannel.invokeMethod('convertHtmlToPdf', args);
+    if (result == null) {
+      throw PlatformException(
+        code: 'PDF_GENERATION_FAILED',
+        message: 'PDF generation failed: Native platform returned null',
+        details: 'This may be caused by a timeout, memory issue, or WebView rendering failure.',
+      );
+    }
     return result as String;
   }
 
   /// Converts HTML content directly to PDF bytes without saving to file
+  /// Returns null if the conversion fails (caller should handle this case)
   Future<Uint8List?> _convertHtmlToPdfBytes(
     String html,
     PdfPageSize? pageSize,
