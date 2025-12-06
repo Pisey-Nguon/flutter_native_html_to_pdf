@@ -1,3 +1,18 @@
+## 2.0.0 (BREAKING CHANGE)
+
+* **MAJOR CHANGE: Pure Dart Implementation** - Removed all native code dependencies
+* The package now uses pure Dart code (`htmltopdfwidgets` package) for all platforms
+* Removed native platform implementations for Android (Kotlin) and iOS (Swift)
+* Removed `plugin_platform_interface` dependency
+* **Breaking Change**: Native platform-specific behavior is no longer available. The package now uses a consistent pure Dart implementation across all platforms.
+* **Benefits**: 
+  - Easier to maintain and debug
+  - Consistent behavior across all platforms
+  - No native build requirements
+  - Supports all Flutter platforms including Web and macOS
+* **Migration**: No API changes required - the public API remains the same. Simply update to this version.
+* Note: For advanced users who need WebView-based rendering with native features, consider using the previous version (1.1.4)
+
 ## 1.1.4
 * Refactor PDF generation code by removing debug print statements and improving file path construction
 
