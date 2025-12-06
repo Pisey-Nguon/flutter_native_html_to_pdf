@@ -1,3 +1,6 @@
+## 1.1.4
+* Refactor PDF generation code by removing debug print statements and improving file path construction
+
 ## 1.1.3
 * Fix PDF generation null return by adding early return after failure callback
 
