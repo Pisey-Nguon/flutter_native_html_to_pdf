@@ -11,7 +11,6 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
-  plugin_platform_interface: ^2.1.8
   htmltopdfwidgets: ^1.0.0
 
 dev_dependencies:
@@ -24,27 +23,6 @@ dev_dependencies:
 
 # The following section is specific to Flutter packages.
 flutter:
-  # This section identifies this Flutter project as a plugin project.
-  # The 'pluginClass' specifies the class (in Java, Kotlin, Swift, Objective-C, etc.)
-  # which should be registered in the plugin registry. This is required for
-  # using method channels.
-  # The Android 'package' specifies package in which the registered class is.
-  # This is required for using method channels on Android.
-  # The 'ffiPlugin' specifies that native code should be built and bundled.
-  # This is required for using `dart:ffi`.
-  # All these are used by the tooling to maintain consistency when
-  # adding or updating assets for this project.
-  plugin:
-    platforms:
-      android:
-        package: com.digitaltalend.flutter_native_html_to_pdf
-        pluginClass: FlutterNativeHtmlToPdfPlugin
-      ios:
-        pluginClass: FlutterNativeHtmlToPdfPlugin
-      linux:
-        pluginClass: FlutterNativeHtmlToPdfPlugin
-      windows:
-        pluginClass: FlutterNativeHtmlToPdfPlugin
 
   # To add assets to your plugin package, add an assets section, like this:
   # assets:
