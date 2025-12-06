@@ -4,11 +4,11 @@ This is a Flutter plugin that converts HTML content into a PDF file or PDF bytes
 
 ## Features
 
-- **Pure Dart Implementation**: No native code dependencies - works entirely in Dart
+- **Native Implementation**: Uses native platform APIs (Android WebView, iOS WKWebView) with no third-party dependencies
 - **HTML to PDF File Conversion**: Convert HTML content into a PDF file and save it to a specified directory
 - **HTML to PDF Bytes Conversion**: Convert HTML content directly to `Uint8List` PDF data without saving to a file (better performance)
 - **Customizable Page Sizes**: Support for A4, Letter, Legal, A3, A5, Tabloid, and custom page sizes
-- **Cross-platform Support**: Works on Android, iOS, Windows, Linux, and Web
+- **Full CSS Support**: Properly renders colors, fonts, and styles on both Android and iOS
 
 ## Usage
 
@@ -121,21 +121,23 @@ final pdfBytes = await plugin.convertHtmlToPdfBytes(
 - **Memory Efficiency**: Directly use PDF data in memory
 - **Flexibility**: Easy to upload to servers, share via network, or save conditionally
 
-## Dependencies
-
-- flutter_native_html_to_pdf
-- path_provider (for file-based conversion)
-
 ## Platform Support
 
-This package uses pure Dart code, making it compatible with all Flutter platforms:
+This package uses native platform APIs with **no third-party dependencies**:
 
-- ✅ Android
-- ✅ iOS
-- ✅ Windows
-- ✅ Linux
-- ✅ macOS
-- ✅ Web
+- ✅ **Android** - Uses Android WebView for rendering HTML to PDF
+- ✅ **iOS** - Uses WKWebView for rendering HTML to PDF
+- ❌ Windows - Not supported (no third-party dependencies)
+- ❌ Linux - Not supported (no third-party dependencies)
+- ❌ macOS - Not supported (no third-party dependencies)
+- ❌ Web - Not supported (no third-party dependencies)
+
+## Dependencies
+
+This package has **no third-party dependencies** - it only uses:
+- `flutter` SDK
+- `plugin_platform_interface` (for Flutter plugin architecture)
+- Native platform APIs (Android WebView, iOS WKWebView)
 
 ## Note
 
@@ -190,9 +192,35 @@ const htmlContent = """
 ### Using Images in HTML
 
 This plugin supports loading images in your HTML content, including:
-- **Base64 encoded images** (e.g., `data:image/png;base64,...`) - **Recommended**
 - **External images** via HTTP/HTTPS URLs (e.g., `https://example.com/image.jpg`)
+- **Base64 encoded images** (e.g., `data:image/png;base64,...`)
 - **Local file images** (with proper file:// URLs)
+
+**Important Configuration for External Images:**
+
+#### Android
+Add the INTERNET permission to your `android/app/src/main/AndroidManifest.xml`:
+
+```xml
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+    <uses-permission android:name="android.permission.INTERNET" />
+    
+    <application>
+        ...
+    </application>
+</manifest>
+```
+
+#### iOS
+Add App Transport Security settings to your `ios/Runner/Info.plist`:
+
+```xml
+<key>NSAppTransportSecurity</key>
+<dict>
+    <key>NSAllowsArbitraryLoads</key>
+    <true/>
+</dict>
+```
 
 **Example HTML with images:**
 
@@ -205,11 +233,15 @@ const htmlContent = """
 </head>
 <body>
     <h1>My Document</h1>
-    <img src="data:image/png;base64,iVBORw0KG..." alt="Base64 image">
-    <p>Image embedded as base64</p>
+    <img src="https://picsum.photos/200/300" alt="Sample image">
+    <p>Image from URL</p>
 </body>
 </html>
 """;
 ```
 
-**Note:** For best results, use base64 encoded images as they are embedded directly in the HTML and don't require network access.
+**Note:** The plugin automatically waits for images to load before generating the PDF. For optimal results with external images:
+- Ensure you have a stable internet connection
+- The plugin uses JavaScript to detect when all images have finished loading (either successfully or with errors)
+- Only a minimal 300ms delay is added after image loading for final rendering
+- For faster generation, consider using base64 encoded images or local assets
