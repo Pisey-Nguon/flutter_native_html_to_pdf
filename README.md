@@ -1,14 +1,16 @@
 # Flutter Native HTML to PDF
 
-This is a Flutter plugin that converts HTML content into a PDF file or PDF bytes. The generated PDF can be saved as a file or used directly as `Uint8List` for better performance.
+Pure Dart HTML to PDF converter that works on all platforms. Converts HTML content into PDF files or bytes with CSS color and style support.
 
 ## Features
 
-- **Native Implementation**: Uses native platform APIs (Android WebView, iOS WKWebView) with no third-party dependencies
+- **Pure Dart Implementation**: No native code dependencies - works entirely in Dart
+- **Cross-Platform**: Works on Android, iOS, Windows, Linux, macOS, and Web
 - **HTML to PDF File Conversion**: Convert HTML content into a PDF file and save it to a specified directory
 - **HTML to PDF Bytes Conversion**: Convert HTML content directly to `Uint8List` PDF data without saving to a file (better performance)
 - **Customizable Page Sizes**: Support for A4, Letter, Legal, A3, A5, Tabloid, and custom page sizes
-- **Full CSS Support**: Properly renders colors, fonts, and styles on both Android and iOS
+- **CSS Support**: Supports colors (hex, rgb, named), font sizes, bold, italic, underline, and more
+- **HTML Elements**: Supports headings, paragraphs, divs, spans, lists, tables, links, and more
 
 ## Usage
 
@@ -123,21 +125,22 @@ final pdfBytes = await plugin.convertHtmlToPdfBytes(
 
 ## Platform Support
 
-This package uses native platform APIs with **no third-party dependencies**:
+This package uses **pure Dart** with no native code dependencies:
 
-- ✅ **Android** - Uses Android WebView for rendering HTML to PDF
-- ✅ **iOS** - Uses WKWebView for rendering HTML to PDF
-- ❌ Windows - Not supported (no third-party dependencies)
-- ❌ Linux - Not supported (no third-party dependencies)
-- ❌ macOS - Not supported (no third-party dependencies)
-- ❌ Web - Not supported (no third-party dependencies)
+- ✅ **Android** - Pure Dart implementation
+- ✅ **iOS** - Pure Dart implementation
+- ✅ **Windows** - Pure Dart implementation
+- ✅ **Linux** - Pure Dart implementation
+- ✅ **macOS** - Pure Dart implementation
+- ✅ **Web** - Pure Dart implementation
 
 ## Dependencies
 
-This package has **no third-party dependencies** - it only uses:
-- `flutter` SDK
-- `plugin_platform_interface` (for Flutter plugin architecture)
-- Native platform APIs (Android WebView, iOS WKWebView)
+This package uses only Dart dependencies:
+- `pdf` - Pure Dart PDF generation library
+- `html` - Pure Dart HTML parsing library
+
+**No native code dependencies** - works entirely in Dart across all platforms.
 
 ## Note
 
@@ -145,11 +148,11 @@ The HTML content can be static or dynamic. You can use any valid HTML, including
 
 ### CSS Styles and Fonts
 
-This plugin fully supports CSS styling in your HTML content on both Android and iOS:
-- **Colors**: Background colors, text colors, border colors
-- **Fonts**: Font families, sizes, weights, and styles (bold, italic, etc.)
-- **Layout**: Margins, padding, borders, positioning
-- **All standard CSS properties**
+This plugin supports CSS styling in your HTML content:
+- **Colors**: Text colors (hex, rgb, named colors), background colors
+- **Fonts**: Font sizes, weights (bold), and styles (italic, underline)
+- **Layout**: Basic layout with support for common HTML elements
+- **Supported HTML elements**: h1-h6, p, div, span, strong, b, em, i, u, a, br, hr, ul, ol, li, table, tr, td, th
 
 **Example HTML with CSS:**
 
@@ -191,57 +194,4 @@ const htmlContent = """
 
 ### Using Images in HTML
 
-This plugin supports loading images in your HTML content, including:
-- **External images** via HTTP/HTTPS URLs (e.g., `https://example.com/image.jpg`)
-- **Base64 encoded images** (e.g., `data:image/png;base64,...`)
-- **Local file images** (with proper file:// URLs)
-
-**Important Configuration for External Images:**
-
-#### Android
-Add the INTERNET permission to your `android/app/src/main/AndroidManifest.xml`:
-
-```xml
-<manifest xmlns:android="http://schemas.android.com/apk/res/android">
-    <uses-permission android:name="android.permission.INTERNET" />
-    
-    <application>
-        ...
-    </application>
-</manifest>
-```
-
-#### iOS
-Add App Transport Security settings to your `ios/Runner/Info.plist`:
-
-```xml
-<key>NSAppTransportSecurity</key>
-<dict>
-    <key>NSAllowsArbitraryLoads</key>
-    <true/>
-</dict>
-```
-
-**Example HTML with images:**
-
-```dart
-const htmlContent = """
-<!DOCTYPE html>
-<html>
-<head>
-    <title>PDF with Images</title>
-</head>
-<body>
-    <h1>My Document</h1>
-    <img src="https://picsum.photos/200/300" alt="Sample image">
-    <p>Image from URL</p>
-</body>
-</html>
-""";
-```
-
-**Note:** The plugin automatically waits for images to load before generating the PDF. For optimal results with external images:
-- Ensure you have a stable internet connection
-- The plugin uses JavaScript to detect when all images have finished loading (either successfully or with errors)
-- Only a minimal 300ms delay is added after image loading for final rendering
-- For faster generation, consider using base64 encoded images or local assets
+**Note:** Image support is currently limited in the pure Dart implementation. For basic image placeholders, the alt text will be displayed. For better image support, consider using base64 encoded images in future versions.

@@ -1,3 +1,14 @@
+## 3.0.0
+
+* **BREAKING CHANGE: Pure Dart implementation with no native code**
+* Completely rewritten using pure Dart - no native code dependencies (Android WebView/iOS WKWebView removed)
+* Uses `pdf` and `html` packages for pure Dart HTML to PDF conversion
+* **All platforms supported**: Android, iOS, Windows, Linux, macOS, and Web
+* CSS support: colors (hex, rgb, named), font sizes, bold, italic, underline, background colors
+* Supported HTML elements: h1-h6, p, div, span, strong, b, em, i, u, a, br, hr, ul, ol, li, table, tr, td, th
+* Better maintainability and consistency across all platforms
+* No platform-specific code or build requirements
+
 ## 2.0.0
 
 * **BREAKING CHANGE: Removed all third-party dependencies**
