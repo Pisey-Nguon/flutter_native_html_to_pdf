@@ -190,7 +190,6 @@ class HtmlToPdfConverter {
     if (children.isEmpty) return pw.SizedBox();
     
     final backgroundColor = _getBackgroundColor(element);
-    final color = _getColor(element);
     
     return pw.Container(
       padding: const pw.EdgeInsets.all(5),
@@ -435,8 +434,8 @@ class HtmlToPdfConverter {
     final style = element.attributes['style'];
     if (style == null) return 12;
     
-    // Parse font-size from style attribute
-    final sizeMatch = RegExp(r'font-size:\s*(\d+)').firstMatch(style);
+    // Parse font-size from style attribute (supports px, pt, em, and unitless)
+    final sizeMatch = RegExp(r'font-size:\s*([\d.]+)(?:px|pt|em)?').firstMatch(style);
     if (sizeMatch != null) {
       return double.tryParse(sizeMatch.group(1) ?? '12') ?? 12;
     }
