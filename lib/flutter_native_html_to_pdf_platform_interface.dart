@@ -28,7 +28,6 @@ abstract class FlutterNativeHtmlToPdfPlatform extends PlatformInterface {
     _instance = instance;
   }
 
-
   Future<File?> convertHtmlToPdf({
     required String html,
     required String targetDirectory,
@@ -42,6 +41,7 @@ abstract class FlutterNativeHtmlToPdfPlatform extends PlatformInterface {
     required String html,
     PdfPageSize? pageSize,
   }) {
-    throw UnimplementedError('convertHtmlToPdfBytes() has not been implemented.');
+    throw UnimplementedError(
+        'convertHtmlToPdfBytes() has not been implemented.');
   }
 }

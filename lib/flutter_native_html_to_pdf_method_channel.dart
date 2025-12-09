@@ -80,7 +80,8 @@ class MethodChannelFlutterNativeHtmlToPdf
       throw PlatformException(
         code: 'PDF_GENERATION_FAILED',
         message: 'PDF generation failed: Native platform returned null',
-        details: 'This may be caused by a timeout, memory issue, or WebView rendering failure.',
+        details:
+            'This may be caused by a timeout, memory issue, or WebView rendering failure.',
       );
     }
     return result as String;
@@ -98,7 +99,8 @@ class MethodChannelFlutterNativeHtmlToPdf
     if (pageSize != null) {
       args['pageSize'] = pageSize.toMap();
     }
-    final result = await methodChannel.invokeMethod('convertHtmlToPdfBytes', args);
+    final result =
+        await methodChannel.invokeMethod('convertHtmlToPdfBytes', args);
     return result as Uint8List?;
   }
 }

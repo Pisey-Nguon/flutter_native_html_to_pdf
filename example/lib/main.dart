@@ -32,7 +32,7 @@ class _MyAppState extends State<MyApp> {
   void initState() {
     super.initState();
   }
-  
+
   Future<void> generateExampleDocument() async {
     const htmlContent = """
    <!DOCTYPE html>
@@ -95,7 +95,7 @@ class _MyAppState extends State<MyApp> {
         backgroundColor: Colors.blue,
         textColor: Colors.white,
       );
-      
+
       Directory appDocDir = await getApplicationDocumentsDirectory();
       final targetPath = appDocDir.path;
       const targetFileName = "mytext";
@@ -108,17 +108,17 @@ class _MyAppState extends State<MyApp> {
       );
 
       generatedPdfFilePath = generatedPdfFile?.path;
-      
+
       // Show success toast
       Fluttertoast.showToast(
-        msg: "PDF file generated successfully with ${selectedPageSize.name} size!",
+        msg:
+            "PDF file generated successfully with ${selectedPageSize.name} size!",
         toastLength: Toast.LENGTH_SHORT,
         gravity: ToastGravity.BOTTOM,
         backgroundColor: Colors.green,
         textColor: Colors.white,
       );
     } catch (e) {
-      
       // Show error toast
       Fluttertoast.showToast(
         msg: "Failed to generate PDF file",
@@ -168,18 +168,20 @@ class _MyAppState extends State<MyApp> {
     <p>Page size: SELECTED_PAGE_SIZE</p>
 </body>
 </html>
-    """.replaceAll('SELECTED_PAGE_SIZE', selectedPageSize.name);
+    """
+        .replaceAll('SELECTED_PAGE_SIZE', selectedPageSize.name);
 
     try {
       // Show start toast
       Fluttertoast.showToast(
-        msg: "Converting HTML to PDF bytes with ${selectedPageSize.name} size...",
+        msg:
+            "Converting HTML to PDF bytes with ${selectedPageSize.name} size...",
         toastLength: Toast.LENGTH_SHORT,
         gravity: ToastGravity.BOTTOM,
         backgroundColor: Colors.blue,
         textColor: Colors.white,
       );
-      
+
       final pdfBytes =
           await _flutterNativeHtmlToPdfPlugin.convertHtmlToPdfBytes(
         html: htmlContent,
@@ -189,11 +191,12 @@ class _MyAppState extends State<MyApp> {
       setState(() {
         generatedPdfBytes = pdfBytes;
       });
-      
+
       if (pdfBytes != null) {
         // Show success toast
         Fluttertoast.showToast(
-          msg: "PDF bytes generated successfully! (${pdfBytes.length} bytes, ${selectedPageSize.name})",
+          msg:
+              "PDF bytes generated successfully! (${pdfBytes.length} bytes, ${selectedPageSize.name})",
           toastLength: Toast.LENGTH_LONG,
           gravity: ToastGravity.BOTTOM,
           backgroundColor: Colors.green,
@@ -204,7 +207,7 @@ class _MyAppState extends State<MyApp> {
       setState(() {
         generatedPdfBytes = null;
       });
-      
+
       // Show error toast
       Fluttertoast.showToast(
         msg: "Failed to generate PDF bytes",
@@ -237,12 +240,24 @@ class _MyAppState extends State<MyApp> {
               DropdownButton<PdfPageSize>(
                 value: selectedPageSize,
                 items: [
-                  DropdownMenuItem(value: PdfPageSize.a4, child: Text('A4 (${PdfPageSize.a4.name})')),
-                  DropdownMenuItem(value: PdfPageSize.letter, child: Text('Letter (${PdfPageSize.letter.name})')),
-                  DropdownMenuItem(value: PdfPageSize.legal, child: Text('Legal (${PdfPageSize.legal.name})')),
-                  DropdownMenuItem(value: PdfPageSize.a3, child: Text('A3 (${PdfPageSize.a3.name})')),
-                  DropdownMenuItem(value: PdfPageSize.a5, child: Text('A5 (${PdfPageSize.a5.name})')),
-                  DropdownMenuItem(value: PdfPageSize.tabloid, child: Text('Tabloid (${PdfPageSize.tabloid.name})')),
+                  DropdownMenuItem(
+                      value: PdfPageSize.a4,
+                      child: Text('A4 (${PdfPageSize.a4.name})')),
+                  DropdownMenuItem(
+                      value: PdfPageSize.letter,
+                      child: Text('Letter (${PdfPageSize.letter.name})')),
+                  DropdownMenuItem(
+                      value: PdfPageSize.legal,
+                      child: Text('Legal (${PdfPageSize.legal.name})')),
+                  DropdownMenuItem(
+                      value: PdfPageSize.a3,
+                      child: Text('A3 (${PdfPageSize.a3.name})')),
+                  DropdownMenuItem(
+                      value: PdfPageSize.a5,
+                      child: Text('A5 (${PdfPageSize.a5.name})')),
+                  DropdownMenuItem(
+                      value: PdfPageSize.tabloid,
+                      child: Text('Tabloid (${PdfPageSize.tabloid.name})')),
                 ],
                 onChanged: (PdfPageSize? newValue) {
                   if (newValue != null) {
@@ -264,12 +279,11 @@ class _MyAppState extends State<MyApp> {
                 child: const Text("Share PDF (from file)"),
                 onPressed: () async {
                   try {
-                    
                     // Generate if not already generated
                     if (generatedPdfFilePath == null) {
                       await generateExampleDocument();
                     }
-                    
+
                     if (generatedPdfFilePath != null) {
                       Fluttertoast.showToast(
                         msg: "Preparing to share PDF...",
@@ -278,7 +292,7 @@ class _MyAppState extends State<MyApp> {
                         backgroundColor: Colors.orange,
                         textColor: Colors.white,
                       );
-                      
+
                       await SharePlus.instance.share(ShareParams(
                         uri: Uri.file(generatedPdfFilePath!),
                       ));
@@ -307,11 +321,10 @@ class _MyAppState extends State<MyApp> {
                 child: const Text("Share PDF (from bytes)"),
                 onPressed: () async {
                   try {
-                    
                     if (generatedPdfBytes == null) {
                       await generateExampleDocumentBytes();
                     }
-                    
+
                     if (generatedPdfBytes != null) {
                       Fluttertoast.showToast(
                         msg: "Creating temporary file for sharing...",
@@ -320,10 +333,11 @@ class _MyAppState extends State<MyApp> {
                         backgroundColor: Colors.orange,
                         textColor: Colors.white,
                       );
-                      
+
                       // Save bytes to temporary file for sharing
                       final tempDir = await getTemporaryDirectory();
-                      final tempFile = File('${tempDir.path}/temp_pdf_from_bytes.pdf');
+                      final tempFile =
+                          File('${tempDir.path}/temp_pdf_from_bytes.pdf');
                       await tempFile.writeAsBytes(generatedPdfBytes!);
                       await SharePlus.instance.share(ShareParams(
                         uri: Uri.file(tempFile.path),
@@ -350,7 +364,7 @@ class _MyAppState extends State<MyApp> {
               ),
               const SizedBox(height: 20),
               Text(
-                generatedPdfBytes != null 
+                generatedPdfBytes != null
                     ? 'PDF Bytes: ${generatedPdfBytes!.length} bytes ready (${selectedPageSize.name})'
                     : 'Click button to generate PDF',
                 style: const TextStyle(fontSize: 12),

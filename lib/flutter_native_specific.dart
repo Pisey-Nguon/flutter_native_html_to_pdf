@@ -15,12 +15,12 @@ class FlutterNativeSpecific {
     var file = File(filePath);
     final newpdf = Document();
     List<Widget> widgets = await HTMLToPdf().convert(html);
-    
+
     // Use pageSize if provided, otherwise use default
     final pdfPageFormat = pageSize != null
         ? PdfPageFormat(pageSize.width, pageSize.height)
         : PdfPageFormat.a4;
-    
+
     newpdf.addPage(MultiPage(
         pageFormat: pdfPageFormat,
         maxPages: 200,
@@ -36,12 +36,12 @@ class FlutterNativeSpecific {
   }) async {
     final newpdf = Document();
     List<Widget> widgets = await HTMLToPdf().convert(html);
-    
+
     // Use pageSize if provided, otherwise use default
     final pdfPageFormat = pageSize != null
         ? PdfPageFormat(pageSize.width, pageSize.height)
         : PdfPageFormat.a4;
-    
+
     newpdf.addPage(MultiPage(
         pageFormat: pdfPageFormat,
         maxPages: 200,

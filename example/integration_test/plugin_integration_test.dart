@@ -6,9 +6,7 @@
 // For more information about Flutter integration tests, please see
 // https://docs.flutter.dev/cookbook/testing/integration/introduction
 
-
 import 'package:integration_test/integration_test.dart';
-
 
 void main() {
   IntegrationTestWidgetsFlutterBinding.ensureInitialized();

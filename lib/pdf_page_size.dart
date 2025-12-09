@@ -26,7 +26,8 @@ class PdfPageSize {
   static const a5 = PdfPageSize._(width: 419.4, height: 595.2, name: 'A5');
 
   /// US Tabloid page size: 11" x 17"
-  static const tabloid = PdfPageSize._(width: 792, height: 1224, name: 'Tabloid');
+  static const tabloid =
+      PdfPageSize._(width: 792, height: 1224, name: 'Tabloid');
 
   /// Create a custom page size
   /// [width] and [height] are in points (72 points = 1 inch)
