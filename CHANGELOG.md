@@ -1,3 +1,6 @@
+## 1.1.5
+* Refactor code for improved readability by removing unnecessary blank lines and formatting adjustments across multiple files
+
 ## 1.1.4
 * Refactor PDF generation code by removing debug print statements and improving file path construction
 
