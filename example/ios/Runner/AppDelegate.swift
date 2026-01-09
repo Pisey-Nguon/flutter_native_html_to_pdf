@@ -20,9 +20,7 @@ import Flutter
   ) -> UISceneConfiguration {
     // Called when a new scene session is being created.
     // Use this method to select a configuration to create the new scene with.
-    let config = UISceneConfiguration(name: "Default Configuration", sessionRole: connectingSceneSession.role)
-    config.delegateClass = AppDelegate.self
-    return config
+    return UISceneConfiguration(name: "Default Configuration", sessionRole: connectingSceneSession.role)
   }
   
   override func application(
