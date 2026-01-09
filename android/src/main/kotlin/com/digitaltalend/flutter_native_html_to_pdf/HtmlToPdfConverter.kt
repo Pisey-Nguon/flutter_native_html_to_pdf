@@ -219,7 +219,15 @@ class HtmlToPdfConverter {
                         callback.onFailure()
                     }
                 })
+            } else {
+                // Clean up and fail for unsupported Android version (< LOLLIPOP)
+                cleanupWebView(webView)
+                callback.onFailure()
             }
+        } else {
+            // Clean up and fail for unsupported Android version (< KITKAT)
+            cleanupWebView(webView)
+            callback.onFailure()
         }
     }
 
@@ -275,7 +283,15 @@ class HtmlToPdfConverter {
                         callback.onFailure()
                     }
                 })
+            } else {
+                // Clean up and fail for unsupported Android version (< LOLLIPOP)
+                cleanupWebView(webView)
+                callback.onFailure()
             }
+        } else {
+            // Clean up and fail for unsupported Android version (< KITKAT)
+            cleanupWebView(webView)
+            callback.onFailure()
         }
     }
 
