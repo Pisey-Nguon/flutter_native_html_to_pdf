@@ -54,6 +54,32 @@ class PdfPrinter(private val printAttributes: PrintAttributes) {
                                     }
 
                                 }
+
+                                override fun onWriteFailed(error: CharSequence?) {
+                                    super.onWriteFailed(error)
+                                    
+                                    // Close the file descriptor on failure
+                                    try {
+                                        outputFileDescriptor.close()
+                                    } catch (e: Exception) {
+                                        android.util.Log.e("PdfPrinter", "Error closing file descriptor", e)
+                                    }
+                                    
+                                    callback.onFailure()
+                                }
+
+                                override fun onWriteCancelled() {
+                                    super.onWriteCancelled()
+                                    
+                                    // Close the file descriptor on cancellation
+                                    try {
+                                        outputFileDescriptor.close()
+                                    } catch (e: Exception) {
+                                        android.util.Log.e("PdfPrinter", "Error closing file descriptor", e)
+                                    }
+                                    
+                                    callback.onFailure()
+                                }
                             })
                     }
                 },
