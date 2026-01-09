@@ -26,10 +26,16 @@ class HtmlToPdfConverter {
         fun onFailure()
     }
 
+    // Keep strong references to WebViews during PDF generation to prevent garbage collection
+    private val activeWebViews = mutableSetOf<WebView>()
+
     @SuppressLint("SetJavaScriptEnabled")
     fun convert(filePath: String, applicationContext: Context, callback: Callback, pageSize: Map<String, Any>? = null) {
         val webView = WebView(applicationContext)
         val htmlContent = File(filePath).readText(Charsets.UTF_8)
+        
+        // Keep strong reference to prevent garbage collection during async operations
+        activeWebViews.add(webView)
         
         // Configure WebView settings
         webView.settings.javaScriptEnabled = true
@@ -102,6 +108,9 @@ class HtmlToPdfConverter {
     @SuppressLint("SetJavaScriptEnabled")
     fun convertToBytes(html: String, applicationContext: Context, callback: BytesCallback, pageSize: Map<String, Any>? = null) {
         val webView = WebView(applicationContext)
+        
+        // Keep strong reference to prevent garbage collection during async operations
+        activeWebViews.add(webView)
         
         // Configure WebView settings
         webView.settings.javaScriptEnabled = true
@@ -199,10 +208,14 @@ class HtmlToPdfConverter {
 
                 printer.print(adapter, path, temporaryFileName, object : PdfPrinter.Callback {
                     override fun onSuccess(filePath: String) {
+                        // Clean up WebView reference after successful PDF generation
+                        cleanupWebView(webView)
                         callback.onSuccess(filePath)
                     }
 
                     override fun onFailure() {
+                        // Clean up WebView reference on failure
+                        cleanupWebView(webView)
                         callback.onFailure()
                     }
                 })
@@ -245,18 +258,36 @@ class HtmlToPdfConverter {
                             if (!deleteSuccess) {
                                 android.util.Log.w("HtmlToPdfConverter", "Failed to delete temporary file: $filePath")
                             }
+                            // Clean up WebView reference after successful PDF generation
+                            cleanupWebView(webView)
                             callback.onSuccess(bytes)
                         } catch (e: Exception) {
                             android.util.Log.e("HtmlToPdfConverter", "Error reading or deleting temporary PDF file", e)
+                            // Clean up WebView reference on error
+                            cleanupWebView(webView)
                             callback.onFailure()
                         }
                     }
 
                     override fun onFailure() {
+                        // Clean up WebView reference on failure
+                        cleanupWebView(webView)
                         callback.onFailure()
                     }
                 })
             }
+        }
+    }
+
+    /**
+     * Clean up WebView and remove from active references to allow garbage collection
+     */
+    private fun cleanupWebView(webView: WebView) {
+        try {
+            activeWebViews.remove(webView)
+            webView.destroy()
+        } catch (e: Exception) {
+            android.util.Log.e("HtmlToPdfConverter", "Error cleaning up WebView", e)
         }
     }
 
