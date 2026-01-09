@@ -297,11 +297,11 @@ class HtmlToPdfConverter {
 
     /**
      * Clean up WebView and remove from active references to allow garbage collection
+     * Note: We don't call destroy() as the PDF printing adapter may still need the WebView
      */
     private fun cleanupWebView(webView: WebView) {
         try {
             activeWebViews.remove(webView)
-            webView.destroy()
         } catch (e: Exception) {
             android.util.Log.e("HtmlToPdfConverter", "Error cleaning up WebView", e)
         }
