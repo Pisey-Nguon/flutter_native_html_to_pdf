@@ -28,13 +28,21 @@ class PdfPrinter(private val printAttributes: PrintAttributes) {
                 object : PrintDocumentAdapter.LayoutResultCallback() {
 
                     override fun onLayoutFinished(info: PrintDocumentInfo, changed: Boolean) {
+                        val outputFileDescriptor = getOutputFile(path, fileName)
                         printAdapter.onWrite(arrayOf(PageRange.ALL_PAGES),
-                            getOutputFile(path, fileName),
+                            outputFileDescriptor,
                             CancellationSignal(),
                             object : PrintDocumentAdapter.WriteResultCallback() {
 
                                 override fun onWriteFinished(pages: Array<PageRange>) {
                                     super.onWriteFinished(pages)
+
+                                    // Close the file descriptor to ensure data is flushed
+                                    try {
+                                        outputFileDescriptor.close()
+                                    } catch (e: Exception) {
+                                        android.util.Log.e("PdfPrinter", "Error closing file descriptor", e)
+                                    }
 
                                     if (pages.isEmpty()) {
                                         callback.onFailure()
