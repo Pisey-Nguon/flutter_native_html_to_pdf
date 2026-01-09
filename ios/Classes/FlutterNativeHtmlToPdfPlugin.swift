@@ -233,7 +233,7 @@ public class FlutterNativeHtmlToPdfPlugin: NSObject, FlutterPlugin, WKNavigation
     private func generatePdfBytes() {
         guard let viewControler = getRootViewController() else {
             if let result = self.currentResult {
-                result(FlutterError(code: "NO_ROOT_VIEW_CONTROLLER", message: "Unable to obtain root view controller", details: nil))
+                result(FlutterError(code: "NO_VIEW_CONTROLLER", message: "Unable to get root view controller", details: nil))
                 self.currentResult = nil
             }
             isProcessing = false
@@ -282,7 +282,7 @@ public class FlutterNativeHtmlToPdfPlugin: NSObject, FlutterPlugin, WKNavigation
     private func generatePdfFile() {
         guard let viewControler = getRootViewController() else {
             if let result = self.currentResult {
-                result(FlutterError(code: "NO_ROOT_VIEW_CONTROLLER", message: "Unable to obtain root view controller", details: nil))
+                result(FlutterError(code: "NO_VIEW_CONTROLLER", message: "Unable to get root view controller", details: nil))
                 self.currentResult = nil
             }
             isProcessing = false
