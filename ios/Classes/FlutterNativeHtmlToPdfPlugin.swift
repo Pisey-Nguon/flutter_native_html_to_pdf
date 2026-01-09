@@ -17,13 +17,26 @@ public class FlutterNativeHtmlToPdfPlugin: NSObject, FlutterPlugin, WKNavigation
     private func getRootViewController() -> UIViewController? {
         if #available(iOS 13.0, *) {
             // Use UIWindowScene for iOS 13+
-            guard let windowScene = UIApplication.shared.connectedScenes.first as? UIWindowScene else {
-                return nil
+            // Filter for active foreground scenes
+            let scenes = UIApplication.shared.connectedScenes
+                .filter { $0.activationState == .foregroundActive }
+                .compactMap { $0 as? UIWindowScene }
+            
+            // Try to find the key window in active scenes first
+            for scene in scenes {
+                if let keyWindow = scene.windows.first(where: { $0.isKeyWindow }) {
+                    return keyWindow.rootViewController
+                }
             }
-            guard let window = windowScene.windows.first(where: { $0.isKeyWindow }) else {
-                return nil
+            
+            // Fallback: use the first window from the first scene
+            for scene in scenes {
+                if let window = scene.windows.first {
+                    return window.rootViewController
+                }
             }
-            return window.rootViewController
+            
+            return nil
         } else {
             // Fallback for iOS 12 and earlier
             return UIApplication.shared.delegate?.window??.rootViewController
