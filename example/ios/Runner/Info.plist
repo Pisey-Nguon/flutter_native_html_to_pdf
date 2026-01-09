@@ -56,8 +56,6 @@
 				<dict>
 					<key>UISceneConfigurationName</key>
 					<string>Default Configuration</string>
-					<key>UISceneDelegateClassName</key>
-					<string>FlutterAppDelegate</string>
 				</dict>
 			</array>
 		</dict>
