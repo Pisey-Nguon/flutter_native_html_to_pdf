@@ -21,7 +21,7 @@ import Flutter
     // Called when a new scene session is being created.
     // Use this method to select a configuration to create the new scene with.
     let config = UISceneConfiguration(name: "Default Configuration", sessionRole: connectingSceneSession.role)
-    config.delegateClass = FlutterAppDelegate.self
+    config.delegateClass = AppDelegate.self
     return config
   }
   
