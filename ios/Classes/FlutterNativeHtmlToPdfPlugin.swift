@@ -19,10 +19,10 @@ public class FlutterNativeHtmlToPdfPlugin: NSObject, FlutterPlugin, WKNavigation
     registrar.addMethodCallDelegate(instance, channel: channel)
   }
     
-    /// Gets the root view controller using the modern scene-based approach (iOS 13+)
-    /// with fallback to the legacy window approach for older iOS versions
+    /// Gets the root view controller using the modern scene-based approach (iOS 13.0 and later)
+    /// with fallback to the legacy window approach for iOS 12 and earlier
     private func getRootViewController() -> UIViewController? {
-        // iOS 13+ with UISceneDelegate support
+        // iOS 13.0 and later with UISceneDelegate support
         if #available(iOS 13.0, *) {
             // Try to get the key window from connected scenes
             let windowScene = UIApplication.shared.connectedScenes
