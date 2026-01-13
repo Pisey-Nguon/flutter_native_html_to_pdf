@@ -16,6 +16,9 @@ import java.io.File
 
 class HtmlToPdfConverter {
 
+    // Keep strong reference to WebView during PDF generation to prevent garbage collection
+    private var activeWebView: WebView? = null
+
     interface Callback {
         fun onSuccess(filePath: String)
         fun onFailure()
@@ -28,7 +31,10 @@ class HtmlToPdfConverter {
 
     @SuppressLint("SetJavaScriptEnabled")
     fun convert(filePath: String, applicationContext: Context, callback: Callback, pageSize: Map<String, Any>? = null) {
+        // Create and retain WebView reference to prevent garbage collection during PDF generation
         val webView = WebView(applicationContext)
+        activeWebView = webView
+        
         val htmlContent = File(filePath).readText(Charsets.UTF_8)
         
         // Configure WebView settings
@@ -58,42 +64,73 @@ class HtmlToPdfConverter {
             override fun onPageFinished(view: WebView, url: String) {
                 super.onPageFinished(view, url)
                 
-                // Inject JavaScript to wait for all images to load
+                // Inject JavaScript to wait for all images and fonts to load
                 view.evaluateJavascript(
                     """
                     (function() {
                         return new Promise(function(resolve) {
-                            var images = document.getElementsByTagName('img');
-                            if (images.length === 0) {
-                                resolve('no-images');
-                                return;
-                            }
-                            var loadedCount = 0;
-                            var totalImages = images.length;
-                            
-                            function checkAllLoaded() {
-                                loadedCount++;
-                                if (loadedCount >= totalImages) {
-                                    resolve('all-loaded');
+                            // Wait for fonts to load first
+                            if (document.fonts && document.fonts.ready) {
+                                document.fonts.ready.then(function() {
+                                    // After fonts load, wait for images
+                                    var images = document.getElementsByTagName('img');
+                                    if (images.length === 0) {
+                                        resolve('fonts-loaded-no-images');
+                                        return;
+                                    }
+                                    var loadedCount = 0;
+                                    var totalImages = images.length;
+                                    
+                                    function checkAllLoaded() {
+                                        loadedCount++;
+                                        if (loadedCount >= totalImages) {
+                                            resolve('all-loaded');
+                                        }
+                                    }
+                                    
+                                    for (var i = 0; i < images.length; i++) {
+                                        if (images[i].complete) {
+                                            checkAllLoaded();
+                                        } else {
+                                            images[i].addEventListener('load', checkAllLoaded);
+                                            images[i].addEventListener('error', checkAllLoaded);
+                                        }
+                                    }
+                                });
+                            } else {
+                                // Fallback for browsers without document.fonts API
+                                var images = document.getElementsByTagName('img');
+                                if (images.length === 0) {
+                                    resolve('no-fonts-api-no-images');
+                                    return;
                                 }
-                            }
-                            
-                            for (var i = 0; i < images.length; i++) {
-                                if (images[i].complete) {
-                                    checkAllLoaded();
-                                } else {
-                                    images[i].addEventListener('load', checkAllLoaded);
-                                    images[i].addEventListener('error', checkAllLoaded);
+                                var loadedCount = 0;
+                                var totalImages = images.length;
+                                
+                                function checkAllLoaded() {
+                                    loadedCount++;
+                                    if (loadedCount >= totalImages) {
+                                        resolve('all-loaded-no-fonts-api');
+                                    }
+                                }
+                                
+                                for (var i = 0; i < images.length; i++) {
+                                    if (images[i].complete) {
+                                        checkAllLoaded();
+                                    } else {
+                                        images[i].addEventListener('load', checkAllLoaded);
+                                        images[i].addEventListener('error', checkAllLoaded);
+                                    }
                                 }
                             }
                         });
                     })();
                     """.trimIndent()
                 ) { result ->
-                    // Small delay to ensure rendering is complete after images load
+                    // Increase delay to 500ms to ensure fonts and images are fully rendered
                     Handler(Looper.getMainLooper()).postDelayed({
                         createPdfFromWebView(webView, applicationContext, callback, pageSize)
-                    }, 300)
+                    }, 500)
                 }
             }
         }
@@ -101,7 +138,9 @@ class HtmlToPdfConverter {
 
     @SuppressLint("SetJavaScriptEnabled")
     fun convertToBytes(html: String, applicationContext: Context, callback: BytesCallback, pageSize: Map<String, Any>? = null) {
+        // Create and retain WebView reference to prevent garbage collection during PDF generation
         val webView = WebView(applicationContext)
+        activeWebView = webView
         
         // Configure WebView settings
         webView.settings.javaScriptEnabled = true
@@ -130,42 +169,73 @@ class HtmlToPdfConverter {
             override fun onPageFinished(view: WebView, url: String) {
                 super.onPageFinished(view, url)
                 
-                // Inject JavaScript to wait for all images to load
+                // Inject JavaScript to wait for all images and fonts to load
                 view.evaluateJavascript(
                     """
                     (function() {
                         return new Promise(function(resolve) {
-                            var images = document.getElementsByTagName('img');
-                            if (images.length === 0) {
-                                resolve('no-images');
-                                return;
-                            }
-                            var loadedCount = 0;
-                            var totalImages = images.length;
-                            
-                            function checkAllLoaded() {
-                                loadedCount++;
-                                if (loadedCount >= totalImages) {
-                                    resolve('all-loaded');
+                            // Wait for fonts to load first
+                            if (document.fonts && document.fonts.ready) {
+                                document.fonts.ready.then(function() {
+                                    // After fonts load, wait for images
+                                    var images = document.getElementsByTagName('img');
+                                    if (images.length === 0) {
+                                        resolve('fonts-loaded-no-images');
+                                        return;
+                                    }
+                                    var loadedCount = 0;
+                                    var totalImages = images.length;
+                                    
+                                    function checkAllLoaded() {
+                                        loadedCount++;
+                                        if (loadedCount >= totalImages) {
+                                            resolve('all-loaded');
+                                        }
+                                    }
+                                    
+                                    for (var i = 0; i < images.length; i++) {
+                                        if (images[i].complete) {
+                                            checkAllLoaded();
+                                        } else {
+                                            images[i].addEventListener('load', checkAllLoaded);
+                                            images[i].addEventListener('error', checkAllLoaded);
+                                        }
+                                    }
+                                });
+                            } else {
+                                // Fallback for browsers without document.fonts API
+                                var images = document.getElementsByTagName('img');
+                                if (images.length === 0) {
+                                    resolve('no-fonts-api-no-images');
+                                    return;
                                 }
-                            }
-                            
-                            for (var i = 0; i < images.length; i++) {
-                                if (images[i].complete) {
-                                    checkAllLoaded();
-                                } else {
-                                    images[i].addEventListener('load', checkAllLoaded);
-                                    images[i].addEventListener('error', checkAllLoaded);
+                                var loadedCount = 0;
+                                var totalImages = images.length;
+                                
+                                function checkAllLoaded() {
+                                    loadedCount++;
+                                    if (loadedCount >= totalImages) {
+                                        resolve('all-loaded-no-fonts-api');
+                                    }
+                                }
+                                
+                                for (var i = 0; i < images.length; i++) {
+                                    if (images[i].complete) {
+                                        checkAllLoaded();
+                                    } else {
+                                        images[i].addEventListener('load', checkAllLoaded);
+                                        images[i].addEventListener('error', checkAllLoaded);
+                                    }
                                 }
                             }
                         });
                     })();
                     """.trimIndent()
                 ) { result ->
-                    // Small delay to ensure rendering is complete after images load
+                    // Increase delay to 500ms to ensure fonts and images are fully rendered
                     Handler(Looper.getMainLooper()).postDelayed({
                         createPdfBytesFromWebView(webView, applicationContext, callback, pageSize)
-                    }, 300)
+                    }, 500)
                 }
             }
         }
@@ -199,10 +269,14 @@ class HtmlToPdfConverter {
 
                 printer.print(adapter, path, temporaryFileName, object : PdfPrinter.Callback {
                     override fun onSuccess(filePath: String) {
+                        // Clear WebView reference after successful PDF generation
+                        activeWebView = null
                         callback.onSuccess(filePath)
                     }
 
                     override fun onFailure() {
+                        // Clear WebView reference after failed PDF generation
+                        activeWebView = null
                         callback.onFailure()
                     }
                 })
@@ -245,14 +319,20 @@ class HtmlToPdfConverter {
                             if (!deleteSuccess) {
                                 android.util.Log.w("HtmlToPdfConverter", "Failed to delete temporary file: $filePath")
                             }
+                            // Clear WebView reference after successful PDF generation
+                            activeWebView = null
                             callback.onSuccess(bytes)
                         } catch (e: Exception) {
                             android.util.Log.e("HtmlToPdfConverter", "Error reading or deleting temporary PDF file", e)
+                            // Clear WebView reference after error
+                            activeWebView = null
                             callback.onFailure()
                         }
                     }
 
                     override fun onFailure() {
+                        // Clear WebView reference after failed PDF generation
+                        activeWebView = null
                         callback.onFailure()
                     }
                 })
