@@ -257,7 +257,9 @@ class HtmlToPdfConverter {
                 }
                 
                 // Wait for fonts to load first, then images
-                if (document.fonts && document.fonts.ready) {
+                if (typeof document.fonts !== 'undefined' && 
+                    document.fonts && 
+                    typeof document.fonts.ready !== 'undefined') {
                     return document.fonts.ready.then(waitForImages);
                 } else {
                     // Fallback for browsers without document.fonts API
