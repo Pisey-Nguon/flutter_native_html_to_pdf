@@ -292,9 +292,11 @@ class _MyAppState extends State<MyApp> {
                         backgroundColor: Colors.orange,
                         textColor: Colors.white,
                       );
-
                       await SharePlus.instance.share(ShareParams(
-                        uri: Uri.file(generatedPdfFilePath!),
+                        title: "Generated PDF Document",
+                        text: "Here is the PDF document generated from HTML.",
+                        subject: "Generated PDF",
+                        files: [XFile(generatedPdfFilePath!, mimeType: 'application/pdf')],
                       ));
                     } else {
                       Fluttertoast.showToast(
@@ -340,7 +342,10 @@ class _MyAppState extends State<MyApp> {
                           File('${tempDir.path}/temp_pdf_from_bytes.pdf');
                       await tempFile.writeAsBytes(generatedPdfBytes!);
                       await SharePlus.instance.share(ShareParams(
-                        uri: Uri.file(tempFile.path),
+                        title: "Generated PDF Document",
+                        text: "Here is the PDF document generated from HTML.",
+                        subject: "Generated PDF",
+                        files: [XFile(tempFile.path, mimeType: 'application/pdf')],
                       ));
                     } else {
                       Fluttertoast.showToast(
