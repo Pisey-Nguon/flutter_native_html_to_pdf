@@ -17,6 +17,8 @@ import java.io.File
 class HtmlToPdfConverter {
 
     // Keep strong reference to WebView during PDF generation to prevent garbage collection
+    // Using @Volatile to ensure thread-safe visibility across threads
+    @Volatile
     private var activeWebView: WebView? = null
 
     interface Callback {
@@ -32,6 +34,8 @@ class HtmlToPdfConverter {
     @SuppressLint("SetJavaScriptEnabled")
     fun convert(filePath: String, applicationContext: Context, callback: Callback, pageSize: Map<String, Any>? = null) {
         // Create and retain WebView reference to prevent garbage collection during PDF generation
+        // Clear any previous reference to avoid memory leaks
+        activeWebView = null
         val webView = WebView(applicationContext)
         activeWebView = webView
         
@@ -68,40 +72,11 @@ class HtmlToPdfConverter {
                 view.evaluateJavascript(
                     """
                     (function() {
-                        return new Promise(function(resolve) {
-                            // Wait for fonts to load first
-                            if (document.fonts && document.fonts.ready) {
-                                document.fonts.ready.then(function() {
-                                    // After fonts load, wait for images
-                                    var images = document.getElementsByTagName('img');
-                                    if (images.length === 0) {
-                                        resolve('fonts-loaded-no-images');
-                                        return;
-                                    }
-                                    var loadedCount = 0;
-                                    var totalImages = images.length;
-                                    
-                                    function checkAllLoaded() {
-                                        loadedCount++;
-                                        if (loadedCount >= totalImages) {
-                                            resolve('all-loaded');
-                                        }
-                                    }
-                                    
-                                    for (var i = 0; i < images.length; i++) {
-                                        if (images[i].complete) {
-                                            checkAllLoaded();
-                                        } else {
-                                            images[i].addEventListener('load', checkAllLoaded);
-                                            images[i].addEventListener('error', checkAllLoaded);
-                                        }
-                                    }
-                                });
-                            } else {
-                                // Fallback for browsers without document.fonts API
+                        function waitForImages() {
+                            return new Promise(function(resolve) {
                                 var images = document.getElementsByTagName('img');
                                 if (images.length === 0) {
-                                    resolve('no-fonts-api-no-images');
+                                    resolve('no-images');
                                     return;
                                 }
                                 var loadedCount = 0;
@@ -110,7 +85,7 @@ class HtmlToPdfConverter {
                                 function checkAllLoaded() {
                                     loadedCount++;
                                     if (loadedCount >= totalImages) {
-                                        resolve('all-loaded-no-fonts-api');
+                                        resolve('all-loaded');
                                     }
                                 }
                                 
@@ -122,8 +97,16 @@ class HtmlToPdfConverter {
                                         images[i].addEventListener('error', checkAllLoaded);
                                     }
                                 }
-                            }
-                        });
+                            });
+                        }
+                        
+                        // Wait for fonts to load first, then images
+                        if (document.fonts && document.fonts.ready) {
+                            return document.fonts.ready.then(waitForImages);
+                        } else {
+                            // Fallback for browsers without document.fonts API
+                            return waitForImages();
+                        }
                     })();
                     """.trimIndent()
                 ) { result ->
@@ -139,6 +122,8 @@ class HtmlToPdfConverter {
     @SuppressLint("SetJavaScriptEnabled")
     fun convertToBytes(html: String, applicationContext: Context, callback: BytesCallback, pageSize: Map<String, Any>? = null) {
         // Create and retain WebView reference to prevent garbage collection during PDF generation
+        // Clear any previous reference to avoid memory leaks
+        activeWebView = null
         val webView = WebView(applicationContext)
         activeWebView = webView
         
@@ -173,40 +158,11 @@ class HtmlToPdfConverter {
                 view.evaluateJavascript(
                     """
                     (function() {
-                        return new Promise(function(resolve) {
-                            // Wait for fonts to load first
-                            if (document.fonts && document.fonts.ready) {
-                                document.fonts.ready.then(function() {
-                                    // After fonts load, wait for images
-                                    var images = document.getElementsByTagName('img');
-                                    if (images.length === 0) {
-                                        resolve('fonts-loaded-no-images');
-                                        return;
-                                    }
-                                    var loadedCount = 0;
-                                    var totalImages = images.length;
-                                    
-                                    function checkAllLoaded() {
-                                        loadedCount++;
-                                        if (loadedCount >= totalImages) {
-                                            resolve('all-loaded');
-                                        }
-                                    }
-                                    
-                                    for (var i = 0; i < images.length; i++) {
-                                        if (images[i].complete) {
-                                            checkAllLoaded();
-                                        } else {
-                                            images[i].addEventListener('load', checkAllLoaded);
-                                            images[i].addEventListener('error', checkAllLoaded);
-                                        }
-                                    }
-                                });
-                            } else {
-                                // Fallback for browsers without document.fonts API
+                        function waitForImages() {
+                            return new Promise(function(resolve) {
                                 var images = document.getElementsByTagName('img');
                                 if (images.length === 0) {
-                                    resolve('no-fonts-api-no-images');
+                                    resolve('no-images');
                                     return;
                                 }
                                 var loadedCount = 0;
@@ -215,7 +171,7 @@ class HtmlToPdfConverter {
                                 function checkAllLoaded() {
                                     loadedCount++;
                                     if (loadedCount >= totalImages) {
-                                        resolve('all-loaded-no-fonts-api');
+                                        resolve('all-loaded');
                                     }
                                 }
                                 
@@ -227,8 +183,16 @@ class HtmlToPdfConverter {
                                         images[i].addEventListener('error', checkAllLoaded);
                                     }
                                 }
-                            }
-                        });
+                            });
+                        }
+                        
+                        // Wait for fonts to load first, then images
+                        if (document.fonts && document.fonts.ready) {
+                            return document.fonts.ready.then(waitForImages);
+                        } else {
+                            // Fallback for browsers without document.fonts API
+                            return waitForImages();
+                        }
                     })();
                     """.trimIndent()
                 ) { result ->
