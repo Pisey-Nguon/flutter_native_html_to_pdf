@@ -67,7 +67,7 @@ class HtmlToPdfConverter {
                 super.onPageFinished(view, url)
                 
                 // Inject JavaScript to wait for all images and fonts to load
-                view.evaluateJavascript(WAIT_FOR_RESOURCES_JS.trimIndent()) { result ->
+                view.evaluateJavascript(WAIT_FOR_RESOURCES_JS) { result ->
                     // Increase delay to 500ms to ensure fonts and images are fully rendered
                     Handler(Looper.getMainLooper()).postDelayed({
                         createPdfFromWebView(webView, applicationContext, callback, pageSize)
@@ -111,7 +111,7 @@ class HtmlToPdfConverter {
                 super.onPageFinished(view, url)
                 
                 // Inject JavaScript to wait for all images and fonts to load
-                view.evaluateJavascript(WAIT_FOR_RESOURCES_JS.trimIndent()) { result ->
+                view.evaluateJavascript(WAIT_FOR_RESOURCES_JS) { result ->
                     // Increase delay to 500ms to ensure fonts and images are fully rendered
                     Handler(Looper.getMainLooper()).postDelayed({
                         createPdfBytesFromWebView(webView, applicationContext, callback, pageSize)
@@ -257,9 +257,7 @@ class HtmlToPdfConverter {
                 }
                 
                 // Wait for fonts to load first, then images
-                if (typeof document.fonts !== 'undefined' && 
-                    document.fonts && 
-                    typeof document.fonts.ready !== 'undefined') {
+                if (document.fonts && typeof document.fonts.ready !== 'undefined') {
                     return document.fonts.ready.then(waitForImages);
                 } else {
                     // Fallback for browsers without document.fonts API
