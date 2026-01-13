@@ -33,9 +33,7 @@ class HtmlToPdfConverter {
 
     @SuppressLint("SetJavaScriptEnabled")
     fun convert(filePath: String, applicationContext: Context, callback: Callback, pageSize: Map<String, Any>? = null) {
-        // Create and retain WebView reference to prevent garbage collection during PDF generation
-        // Clear any previous reference to avoid memory leaks
-        activeWebView = null
+        // Create WebView and retain reference to prevent garbage collection during PDF generation
         val webView = WebView(applicationContext)
         activeWebView = webView
         
@@ -69,47 +67,7 @@ class HtmlToPdfConverter {
                 super.onPageFinished(view, url)
                 
                 // Inject JavaScript to wait for all images and fonts to load
-                view.evaluateJavascript(
-                    """
-                    (function() {
-                        function waitForImages() {
-                            return new Promise(function(resolve) {
-                                var images = document.getElementsByTagName('img');
-                                if (images.length === 0) {
-                                    resolve('no-images');
-                                    return;
-                                }
-                                var loadedCount = 0;
-                                var totalImages = images.length;
-                                
-                                function checkAllLoaded() {
-                                    loadedCount++;
-                                    if (loadedCount >= totalImages) {
-                                        resolve('all-loaded');
-                                    }
-                                }
-                                
-                                for (var i = 0; i < images.length; i++) {
-                                    if (images[i].complete) {
-                                        checkAllLoaded();
-                                    } else {
-                                        images[i].addEventListener('load', checkAllLoaded);
-                                        images[i].addEventListener('error', checkAllLoaded);
-                                    }
-                                }
-                            });
-                        }
-                        
-                        // Wait for fonts to load first, then images
-                        if (document.fonts && document.fonts.ready) {
-                            return document.fonts.ready.then(waitForImages);
-                        } else {
-                            // Fallback for browsers without document.fonts API
-                            return waitForImages();
-                        }
-                    })();
-                    """.trimIndent()
-                ) { result ->
+                view.evaluateJavascript(WAIT_FOR_RESOURCES_JS.trimIndent()) { result ->
                     // Increase delay to 500ms to ensure fonts and images are fully rendered
                     Handler(Looper.getMainLooper()).postDelayed({
                         createPdfFromWebView(webView, applicationContext, callback, pageSize)
@@ -121,9 +79,7 @@ class HtmlToPdfConverter {
 
     @SuppressLint("SetJavaScriptEnabled")
     fun convertToBytes(html: String, applicationContext: Context, callback: BytesCallback, pageSize: Map<String, Any>? = null) {
-        // Create and retain WebView reference to prevent garbage collection during PDF generation
-        // Clear any previous reference to avoid memory leaks
-        activeWebView = null
+        // Create WebView and retain reference to prevent garbage collection during PDF generation
         val webView = WebView(applicationContext)
         activeWebView = webView
         
@@ -155,47 +111,7 @@ class HtmlToPdfConverter {
                 super.onPageFinished(view, url)
                 
                 // Inject JavaScript to wait for all images and fonts to load
-                view.evaluateJavascript(
-                    """
-                    (function() {
-                        function waitForImages() {
-                            return new Promise(function(resolve) {
-                                var images = document.getElementsByTagName('img');
-                                if (images.length === 0) {
-                                    resolve('no-images');
-                                    return;
-                                }
-                                var loadedCount = 0;
-                                var totalImages = images.length;
-                                
-                                function checkAllLoaded() {
-                                    loadedCount++;
-                                    if (loadedCount >= totalImages) {
-                                        resolve('all-loaded');
-                                    }
-                                }
-                                
-                                for (var i = 0; i < images.length; i++) {
-                                    if (images[i].complete) {
-                                        checkAllLoaded();
-                                    } else {
-                                        images[i].addEventListener('load', checkAllLoaded);
-                                        images[i].addEventListener('error', checkAllLoaded);
-                                    }
-                                }
-                            });
-                        }
-                        
-                        // Wait for fonts to load first, then images
-                        if (document.fonts && document.fonts.ready) {
-                            return document.fonts.ready.then(waitForImages);
-                        } else {
-                            // Fallback for browsers without document.fonts API
-                            return waitForImages();
-                        }
-                    })();
-                    """.trimIndent()
-                ) { result ->
+                view.evaluateJavascript(WAIT_FOR_RESOURCES_JS.trimIndent()) { result ->
                     // Increase delay to 500ms to ensure fonts and images are fully rendered
                     Handler(Looper.getMainLooper()).postDelayed({
                         createPdfBytesFromWebView(webView, applicationContext, callback, pageSize)
@@ -308,5 +224,46 @@ class HtmlToPdfConverter {
         const val temporaryDocumentName = "TemporaryDocumentName"
         const val temporaryFileName = "TemporaryDocumentFile.pdf"
         const val temporaryBytesFileName = "TemporaryBytesFile.pdf"
+        
+        // JavaScript code to wait for fonts and images to load before generating PDF
+        private const val WAIT_FOR_RESOURCES_JS = """
+            (function() {
+                function waitForImages() {
+                    return new Promise(function(resolve) {
+                        var images = document.getElementsByTagName('img');
+                        if (images.length === 0) {
+                            resolve('no-images');
+                            return;
+                        }
+                        var loadedCount = 0;
+                        var totalImages = images.length;
+                        
+                        function checkAllLoaded() {
+                            loadedCount++;
+                            if (loadedCount >= totalImages) {
+                                resolve('all-loaded');
+                            }
+                        }
+                        
+                        for (var i = 0; i < images.length; i++) {
+                            if (images[i].complete) {
+                                checkAllLoaded();
+                            } else {
+                                images[i].addEventListener('load', checkAllLoaded);
+                                images[i].addEventListener('error', checkAllLoaded);
+                            }
+                        }
+                    });
+                }
+                
+                // Wait for fonts to load first, then images
+                if (document.fonts && document.fonts.ready) {
+                    return document.fonts.ready.then(waitForImages);
+                } else {
+                    // Fallback for browsers without document.fonts API
+                    return waitForImages();
+                }
+            })();
+        """
     }
 }
