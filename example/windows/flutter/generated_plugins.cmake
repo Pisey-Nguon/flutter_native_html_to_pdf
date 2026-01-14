@@ -3,7 +3,6 @@
 #
 
 list(APPEND FLUTTER_PLUGIN_LIST
-  flutter_native_html_to_pdf
   share_plus
   url_launcher_windows
 )

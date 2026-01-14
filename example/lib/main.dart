@@ -5,7 +5,6 @@ import 'package:flutter/material.dart';
 import 'dart:async';
 
 import 'package:flutter_native_html_to_pdf/flutter_native_html_to_pdf.dart';
-import 'package:flutter_native_html_to_pdf/pdf_page_size.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:fluttertoast/fluttertoast.dart';
@@ -25,12 +24,146 @@ class _MyAppState extends State<MyApp> {
   String? generatedPdfFilePath;
   Uint8List? generatedPdfBytes;
   PdfPageSize selectedPageSize = PdfPageSize.a4;
+  bool isCustomSize = false;
+  final TextEditingController _widthController = TextEditingController(text: '210');
+  final TextEditingController _heightController = TextEditingController(text: '297');
+  String _customUnit = 'mm'; // 'mm', 'in', 'pt'
 
-  final _flutterNativeHtmlToPdfPlugin = FlutterNativeHtmlToPdf();
+  final _htmlToPdfConverter = HtmlToPdfConverter();
 
   @override
   void initState() {
     super.initState();
+  }
+
+  @override
+  void dispose() {
+    _widthController.dispose();
+    _heightController.dispose();
+    super.dispose();
+  }
+
+  PdfPageSize _getPageSizeByName(String name) {
+    switch (name) {
+      case 'A4':
+        return PdfPageSize.a4;
+      case 'Letter':
+        return PdfPageSize.letter;
+      case 'Legal':
+        return PdfPageSize.legal;
+      case 'A3':
+        return PdfPageSize.a3;
+      case 'A5':
+        return PdfPageSize.a5;
+      case 'Tabloid':
+        return PdfPageSize.tabloid;
+      default:
+        return PdfPageSize.a4;
+    }
+  }
+
+  PdfPageSize _getEffectivePageSize() {
+    if (!isCustomSize) {
+      return selectedPageSize;
+    }
+    
+    final width = double.tryParse(_widthController.text) ?? 210;
+    final height = double.tryParse(_heightController.text) ?? 297;
+    
+    switch (_customUnit) {
+      case 'mm':
+        return PdfPageSize.fromMillimeters(
+          widthMm: width,
+          heightMm: height,
+          name: 'Custom (${width}mm x ${height}mm)',
+        );
+      case 'in':
+        return PdfPageSize.fromInches(
+          widthInches: width,
+          heightInches: height,
+          name: 'Custom ($width" x $height")',
+        );
+      case 'pt':
+        return PdfPageSize.custom(
+          width: width,
+          height: height,
+          name: 'Custom (${width}pt x ${height}pt)',
+        );
+      default:
+        return PdfPageSize.fromMillimeters(widthMm: width, heightMm: height);
+    }
+  }
+
+  List<Widget> _buildCustomSizeInputs() {
+    return [
+      const SizedBox(height: 16),
+      const Text('Enter custom dimensions:',
+          style: TextStyle(fontWeight: FontWeight.w500)),
+      const SizedBox(height: 8),
+      Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          SizedBox(
+            width: 80,
+            child: TextField(
+              controller: _widthController,
+              keyboardType: TextInputType.number,
+              decoration: const InputDecoration(
+                labelText: 'Width',
+                border: OutlineInputBorder(),
+                contentPadding: EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+              ),
+              onChanged: (_) => setState(() {
+                generatedPdfFilePath = null;
+                generatedPdfBytes = null;
+              }),
+            ),
+          ),
+          const SizedBox(width: 8),
+          const Text('x'),
+          const SizedBox(width: 8),
+          SizedBox(
+            width: 80,
+            child: TextField(
+              controller: _heightController,
+              keyboardType: TextInputType.number,
+              decoration: const InputDecoration(
+                labelText: 'Height',
+                border: OutlineInputBorder(),
+                contentPadding: EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+              ),
+              onChanged: (_) => setState(() {
+                generatedPdfFilePath = null;
+                generatedPdfBytes = null;
+              }),
+            ),
+          ),
+          const SizedBox(width: 8),
+          DropdownButton<String>(
+            value: _customUnit,
+            items: const [
+              DropdownMenuItem(value: 'mm', child: Text('mm')),
+              DropdownMenuItem(value: 'in', child: Text('inches')),
+              DropdownMenuItem(value: 'pt', child: Text('points')),
+            ],
+            onChanged: (value) {
+              if (value != null) {
+                setState(() {
+                  _customUnit = value;
+                  generatedPdfFilePath = null;
+                  generatedPdfBytes = null;
+                });
+              }
+            },
+          ),
+        ],
+      ),
+      const SizedBox(height: 8),
+      Text(
+        'Current: ${_getEffectivePageSize().name}',
+        style: const TextStyle(fontSize: 12, color: Colors.grey),
+      ),
+    ];
   }
 
   Future<void> generateExampleDocument() async {
@@ -87,9 +220,11 @@ class _MyAppState extends State<MyApp> {
     """;
 
     try {
+      final effectivePageSize = _getEffectivePageSize();
+      
       // Show start toast
       Fluttertoast.showToast(
-        msg: "Starting PDF generation with ${selectedPageSize.name} size...",
+        msg: "Starting PDF generation with ${effectivePageSize.name} size...",
         toastLength: Toast.LENGTH_SHORT,
         gravity: ToastGravity.BOTTOM,
         backgroundColor: Colors.blue,
@@ -100,19 +235,19 @@ class _MyAppState extends State<MyApp> {
       final targetPath = appDocDir.path;
       const targetFileName = "mytext";
       final generatedPdfFile =
-          await _flutterNativeHtmlToPdfPlugin.convertHtmlToPdf(
+          await _htmlToPdfConverter.convertHtmlToPdf(
         html: htmlContent,
         targetDirectory: targetPath,
         targetName: targetFileName,
-        pageSize: selectedPageSize,
+        pageSize: effectivePageSize,
       );
 
-      generatedPdfFilePath = generatedPdfFile?.path;
+      generatedPdfFilePath = generatedPdfFile.path;
 
       // Show success toast
       Fluttertoast.showToast(
         msg:
-            "PDF file generated successfully with ${selectedPageSize.name} size!",
+            "PDF file generated successfully with ${effectivePageSize.name} size!",
         toastLength: Toast.LENGTH_SHORT,
         gravity: ToastGravity.BOTTOM,
         backgroundColor: Colors.green,
@@ -131,7 +266,7 @@ class _MyAppState extends State<MyApp> {
   }
 
   Future<void> generateExampleDocumentBytes() async {
-    final htmlContent = """
+    const htmlTemplate = """
    <!DOCTYPE html>
 <html>
 <head>
@@ -168,14 +303,16 @@ class _MyAppState extends State<MyApp> {
     <p>Page size: SELECTED_PAGE_SIZE</p>
 </body>
 </html>
-    """
-        .replaceAll('SELECTED_PAGE_SIZE', selectedPageSize.name);
+    """;
 
     try {
+      final effectivePageSize = _getEffectivePageSize();
+      final htmlContent = htmlTemplate.replaceAll('SELECTED_PAGE_SIZE', effectivePageSize.name);
+      
       // Show start toast
       Fluttertoast.showToast(
         msg:
-            "Converting HTML to PDF bytes with ${selectedPageSize.name} size...",
+            "Converting HTML to PDF bytes with ${effectivePageSize.name} size...",
         toastLength: Toast.LENGTH_SHORT,
         gravity: ToastGravity.BOTTOM,
         backgroundColor: Colors.blue,
@@ -183,27 +320,25 @@ class _MyAppState extends State<MyApp> {
       );
 
       final pdfBytes =
-          await _flutterNativeHtmlToPdfPlugin.convertHtmlToPdfBytes(
+          await _htmlToPdfConverter.convertHtmlToPdfBytes(
         html: htmlContent,
-        pageSize: selectedPageSize,
+        pageSize: effectivePageSize,
       );
 
       setState(() {
         generatedPdfBytes = pdfBytes;
       });
 
-      if (pdfBytes != null) {
-        // Show success toast
-        Fluttertoast.showToast(
-          msg:
-              "PDF bytes generated successfully! (${pdfBytes.length} bytes, ${selectedPageSize.name})",
-          toastLength: Toast.LENGTH_LONG,
-          gravity: ToastGravity.BOTTOM,
-          backgroundColor: Colors.green,
-          textColor: Colors.white,
-        );
-      }
-    } catch (e) {
+      // Show success toast
+      Fluttertoast.showToast(
+        msg:
+            "PDF bytes generated successfully! (${pdfBytes.length} bytes, ${effectivePageSize.name})",
+        toastLength: Toast.LENGTH_LONG,
+        gravity: ToastGravity.BOTTOM,
+        backgroundColor: Colors.green,
+        textColor: Colors.white,
+      );
+        } catch (e) {
       setState(() {
         generatedPdfBytes = null;
       });
@@ -237,36 +372,32 @@ class _MyAppState extends State<MyApp> {
                 style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
               ),
               const SizedBox(height: 10),
-              DropdownButton<PdfPageSize>(
-                value: selectedPageSize,
-                items: [
-                  DropdownMenuItem(
-                      value: PdfPageSize.a4,
-                      child: Text('A4 (${PdfPageSize.a4.name})')),
-                  DropdownMenuItem(
-                      value: PdfPageSize.letter,
-                      child: Text('Letter (${PdfPageSize.letter.name})')),
-                  DropdownMenuItem(
-                      value: PdfPageSize.legal,
-                      child: Text('Legal (${PdfPageSize.legal.name})')),
-                  DropdownMenuItem(
-                      value: PdfPageSize.a3,
-                      child: Text('A3 (${PdfPageSize.a3.name})')),
-                  DropdownMenuItem(
-                      value: PdfPageSize.a5,
-                      child: Text('A5 (${PdfPageSize.a5.name})')),
-                  DropdownMenuItem(
-                      value: PdfPageSize.tabloid,
-                      child: Text('Tabloid (${PdfPageSize.tabloid.name})')),
+              DropdownButton<String>(
+                value: isCustomSize ? 'custom' : selectedPageSize.name,
+                items: const [
+                  DropdownMenuItem(value: 'A4', child: Text('A4 (210mm x 297mm)')),
+                  DropdownMenuItem(value: 'Letter', child: Text('Letter (8.5" x 11")')),
+                  DropdownMenuItem(value: 'Legal', child: Text('Legal (8.5" x 14")')),
+                  DropdownMenuItem(value: 'A3', child: Text('A3 (297mm x 420mm)')),
+                  DropdownMenuItem(value: 'A5', child: Text('A5 (148mm x 210mm)')),
+                  DropdownMenuItem(value: 'Tabloid', child: Text('Tabloid (11" x 17")')),
+                  DropdownMenuItem(value: 'custom', child: Text('Custom Size...')),
                 ],
-                onChanged: (PdfPageSize? newValue) {
+                onChanged: (String? newValue) {
                   if (newValue != null) {
                     setState(() {
-                      selectedPageSize = newValue;
+                      isCustomSize = newValue == 'custom';
+                      if (!isCustomSize) {
+                        selectedPageSize = _getPageSizeByName(newValue);
+                      }
+                      // Clear cached PDFs when page size changes
+                      generatedPdfFilePath = null;
+                      generatedPdfBytes = null;
                     });
                   }
                 },
               ),
+              if (isCustomSize) ..._buildCustomSizeInputs(),
               const SizedBox(height: 20),
               ElevatedButton(
                 child: const Text("Generate PDF Bytes"),
@@ -370,7 +501,7 @@ class _MyAppState extends State<MyApp> {
               const SizedBox(height: 20),
               Text(
                 generatedPdfBytes != null
-                    ? 'PDF Bytes: ${generatedPdfBytes!.length} bytes ready (${selectedPageSize.name})'
+                    ? 'PDF Bytes: ${generatedPdfBytes!.length} bytes ready (${_getEffectivePageSize().name})'
                     : 'Click button to generate PDF',
                 style: const TextStyle(fontSize: 12),
               ),

@@ -1,13 +1,23 @@
 # Flutter Native HTML to PDF
 
-This is a Flutter plugin that converts HTML content into a PDF file or PDF bytes. The generated PDF can be saved as a file or used directly as `Uint8List` for better performance.
+A pure Dart package for converting HTML content into PDF files or PDF bytes. Works on all platforms without requiring any native code.
 
 ## Features
 
+- **Pure Dart Implementation**: No native code required - works everywhere Dart runs
 - **HTML to PDF File Conversion**: Convert HTML content into a PDF file and save it to a specified directory
-- **HTML to PDF Bytes Conversion**: Convert HTML content directly to `Uint8List` PDF data without saving to a file (better performance)
-- **Customizable Page Sizes**: Support for A4, Letter, Legal, A3, A5, Tabloid, and custom page sizes
-- **Cross-platform Support**: Works on Android, iOS, Windows, and Linux
+- **HTML to PDF Bytes Conversion**: Convert HTML content directly to `Uint8List` PDF data without saving to a file
+- **Customizable Page Sizes**: Support for A4, Letter, Legal, A3, A5, B5, Executive, Tabloid, and custom page sizes
+- **Cross-platform Support**: Works on Android, iOS, Windows, Linux, macOS, and web
+
+## Installation
+
+Add this to your package's `pubspec.yaml` file:
+
+```yaml
+dependencies:
+  flutter_native_html_to_pdf: ^2.0.0
+```
 
 ## Usage
 
@@ -17,7 +27,7 @@ This is a Flutter plugin that converts HTML content into a PDF file or PDF bytes
 import 'package:flutter_native_html_to_pdf/flutter_native_html_to_pdf.dart';
 import 'package:path_provider/path_provider.dart';
 
-final plugin = FlutterNativeHtmlToPdf();
+final converter = HtmlToPdfConverter();
 
 const htmlContent = """
 <!DOCTYPE html>
@@ -31,13 +41,13 @@ const htmlContent = """
 """;
 
 Directory appDocDir = await getApplicationDocumentsDirectory();
-final pdfFile = await plugin.convertHtmlToPdf(
+final pdfFile = await converter.convertHtmlToPdf(
   html: htmlContent,
   targetDirectory: appDocDir.path,
   targetName: "my_document",
 );
 
-print('PDF saved at: ${pdfFile?.path}');
+print('PDF saved at: ${pdfFile.path}');
 ```
 
 ### Convert HTML to PDF Bytes
@@ -47,7 +57,7 @@ For better performance when you don't need to save the PDF as a file:
 ```dart
 import 'package:flutter_native_html_to_pdf/flutter_native_html_to_pdf.dart';
 
-final plugin = FlutterNativeHtmlToPdf();
+final converter = HtmlToPdfConverter();
 
 const htmlContent = """
 <!DOCTYPE html>
@@ -60,31 +70,28 @@ const htmlContent = """
 </html>
 """;
 
-final pdfBytes = await plugin.convertHtmlToPdfBytes(
+final pdfBytes = await converter.convertHtmlToPdfBytes(
   html: htmlContent,
 );
 
-print('PDF size: ${pdfBytes?.length} bytes');
+print('PDF size: ${pdfBytes.length} bytes');
 
 // Use the bytes directly (e.g., upload to server, share, etc.)
 // Or save to file if needed:
-// await File('path/to/file.pdf').writeAsBytes(pdfBytes!);
+// await File('path/to/file.pdf').writeAsBytes(pdfBytes);
 ```
 
 ### Custom Page Sizes
 
-You can specify different page sizes for your PDFs. The plugin supports common page sizes and custom dimensions:
+You can specify different page sizes for your PDFs. The package supports common page sizes and custom dimensions:
 
 ```dart
 import 'package:flutter_native_html_to_pdf/flutter_native_html_to_pdf.dart';
-import 'package:flutter_native_html_to_pdf/pdf_page_size.dart';
-import 'package:path_provider/path_provider.dart';
 
-final plugin = FlutterNativeHtmlToPdf();
+final converter = HtmlToPdfConverter();
 
 // Use a predefined page size
-Directory appDocDir = await getApplicationDocumentsDirectory();
-final pdfFile = await plugin.convertHtmlToPdf(
+final pdfFile = await converter.convertHtmlToPdf(
   html: htmlContent,
   targetDirectory: appDocDir.path,
   targetName: "my_document",
@@ -98,10 +105,23 @@ final customPageSize = PdfPageSize.custom(
   name: 'My Custom Size',
 );
 
-final pdfBytes = await plugin.convertHtmlToPdfBytes(
-  html: htmlContent,
-  pageSize: customPageSize,
+// Create from millimeters
+final mmPageSize = PdfPageSize.fromMillimeters(
+  widthMm: 210,
+  heightMm: 297,
+  name: 'A4 from mm',
 );
+
+// Create from inches
+final inchPageSize = PdfPageSize.fromInches(
+  widthInches: 8.5,
+  heightInches: 11,
+  name: 'Letter from inches',
+);
+
+// Get landscape/portrait orientation
+final landscapeA4 = PdfPageSize.a4.landscape;
+final portraitA4 = PdfPageSize.a4.portrait;
 ```
 
 **Available predefined page sizes:**
@@ -110,20 +130,41 @@ final pdfBytes = await plugin.convertHtmlToPdfBytes(
 - `PdfPageSize.legal` - US Legal (8.5" x 14")
 - `PdfPageSize.a3` - A3 (297mm x 420mm)
 - `PdfPageSize.a5` - A5 (148mm x 210mm)
+- `PdfPageSize.b5` - B5 (176mm x 250mm)
+- `PdfPageSize.executive` - Executive (7.25" x 10.5")
 - `PdfPageSize.tabloid` - US Tabloid (11" x 17")
 
 **Note:** If no page size is specified, the default is A4.
 
-## Benefits of Using Bytes Method
+## Migration from v1.x
 
-- **Better Performance**: Skip file I/O operations when you don't need a physical file
-- **Memory Efficiency**: Directly use PDF data in memory
-- **Flexibility**: Easy to upload to servers, share via network, or save conditionally
+If you're upgrading from version 1.x, update your code as follows:
+
+```dart
+// Old (v1.x)
+final plugin = FlutterNativeHtmlToPdf();
+final pdfFile = await plugin.convertHtmlToPdf(...);
+
+// New (v2.x)
+final converter = HtmlToPdfConverter();
+final pdfFile = await converter.convertHtmlToPdf(...);
+```
+
+The old `FlutterNativeHtmlToPdf` class is still available but deprecated for backward compatibility.
+
+## Benefits of Pure Dart Implementation
+
+- **No Native Code**: Works on all platforms without platform-specific setup
+- **Simpler Integration**: No need for method channels or platform-specific configurations
+- **Consistent Behavior**: Same rendering across all platforms
+- **Lightweight**: Minimal dependencies
 
 ## Dependencies
 
-- flutter_native_html_to_pdf
-- path_provider (for file-based conversion)
+This package uses only pure Dart packages:
+- [pdf](https://pub.dev/packages/pdf) - For PDF document generation
+- [html](https://pub.dev/packages/html) - For HTML parsing
+- [http](https://pub.dev/packages/http) - For loading remote images
 
 ## Platform Support
 
@@ -131,6 +172,8 @@ final pdfBytes = await plugin.convertHtmlToPdfBytes(
 - ✅ iOS
 - ✅ Windows
 - ✅ Linux
+- ✅ macOS
+- ✅ Web
 
 ## Note
 
