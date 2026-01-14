@@ -3,7 +3,6 @@
 #
 
 list(APPEND FLUTTER_PLUGIN_LIST
-  flutter_native_html_to_pdf
   url_launcher_linux
 )
 

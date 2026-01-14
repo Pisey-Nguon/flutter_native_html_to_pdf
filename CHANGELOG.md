@@ -1,3 +1,34 @@
+## 2.0.0 - BREAKING CHANGE
+
+### Major Changes
+* **Migrated to Pure Dart**: The package no longer uses native code (iOS, Android, etc.) and is now 100% Dart
+* **New Main Class**: Use `HtmlToPdfConverter` instead of `FlutterNativeHtmlToPdf`
+* **No Flutter Dependency**: Package can now be used in pure Dart applications
+* **Cross-platform**: Now supports all platforms including macOS and web
+
+### New Features
+* Added `PdfPageSize.fromMillimeters()` factory for creating page sizes from millimeter values
+* Added `PdfPageSize.fromInches()` factory for creating page sizes from inch values
+* Added `PdfPageSize.landscape` and `PdfPageSize.portrait` getters for orientation conversion
+* Added `PdfPageSize.b5` and `PdfPageSize.executive` predefined page sizes
+* Return types are now non-nullable (`File` and `Uint8List` instead of `File?` and `Uint8List?`)
+
+### Migration Guide
+```dart
+// Old (v1.x)
+final plugin = FlutterNativeHtmlToPdf();
+final pdfFile = await plugin.convertHtmlToPdf(...);
+
+// New (v2.x)
+final converter = HtmlToPdfConverter();
+final pdfFile = await converter.convertHtmlToPdf(...);
+```
+
+### Deprecated
+* `FlutterNativeHtmlToPdf` class is deprecated. Use `HtmlToPdfConverter` instead.
+
+---
+
 ## 1.1.6
 * Refactor iOS code to support scene-based root view controller retrieval and update Info.plist for scene configuration
 * Enhance PDF sharing functionality with improved metadata and file handling
