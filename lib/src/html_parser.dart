@@ -736,11 +736,8 @@ class HtmlParser {
     // Determine width: use explicit width if set, otherwise use shouldExpandWidth logic
     final containerWidth = style.width ?? (shouldExpandWidth ? double.infinity : null);
     
-    // Apply min-width constraint if specified
-    final effectiveWidth = containerWidth;
-    
     return pw.Container(
-      width: effectiveWidth,
+      width: containerWidth,
       height: style.height,
       constraints: (style.minHeight != null || style.minWidth != null)
           ? pw.BoxConstraints(
