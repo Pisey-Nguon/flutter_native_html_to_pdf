@@ -213,6 +213,9 @@ class HtmlParser {
       case 'border-width':
         style.borderWidth = _parseDimension(value);
         break;
+      case 'border-radius':
+        style.borderRadius = _parseDimension(value);
+        break;
       case 'border-left':
         _parseBorderSide(style, value, 'left');
         break;
@@ -221,6 +224,18 @@ class HtmlParser {
         break;
       case 'line-height':
         style.lineHeight = _parseDimension(value);
+        break;
+      case 'width':
+        style.width = _parseDimension(value);
+        break;
+      case 'height':
+        style.height = _parseDimension(value);
+        break;
+      case 'min-height':
+        style.minHeight = _parseDimension(value);
+        break;
+      case 'min-width':
+        style.minWidth = _parseDimension(value);
         break;
     }
   }
@@ -702,7 +717,12 @@ class HtmlParser {
         style.paddingTop == null &&
         style.paddingRight == null &&
         style.paddingBottom == null &&
-        style.paddingLeft == null) {
+        style.paddingLeft == null &&
+        style.borderRadius == null &&
+        style.width == null &&
+        style.height == null &&
+        style.minHeight == null &&
+        style.minWidth == null) {
       return child;
     }
 
@@ -713,8 +733,21 @@ class HtmlParser {
                               style.borderColor != null || 
                               style.borderLeftColor != null;
     
+    // Determine width: use explicit width if set, otherwise use shouldExpandWidth logic
+    final containerWidth = style.width ?? (shouldExpandWidth ? double.infinity : null);
+    
+    // Apply min-width constraint if specified
+    final effectiveWidth = containerWidth;
+    
     return pw.Container(
-      width: shouldExpandWidth ? double.infinity : null,
+      width: effectiveWidth,
+      height: style.height,
+      constraints: (style.minHeight != null || style.minWidth != null)
+          ? pw.BoxConstraints(
+              minHeight: style.minHeight ?? 0,
+              minWidth: style.minWidth ?? 0,
+            )
+          : null,
       padding: style.getEffectivePadding(),
       decoration: pw.BoxDecoration(
         color: style.backgroundColor,
@@ -731,6 +764,9 @@ class HtmlParser {
                     ),
                   )
                 : null,
+        borderRadius: style.borderRadius != null
+            ? pw.BorderRadius.circular(style.borderRadius!)
+            : null,
       ),
       child: child,
     );
@@ -983,6 +1019,12 @@ class CssStyle {
   double? borderWidth;
   PdfColor? borderLeftColor;
   double? borderLeftWidth;
+  double? borderRadius;
+
+  double? width;
+  double? height;
+  double? minHeight;
+  double? minWidth;
 
   CssStyle();
 
@@ -1042,6 +1084,11 @@ class CssStyle {
     borderWidth = other.borderWidth ?? borderWidth;
     borderLeftColor = other.borderLeftColor ?? borderLeftColor;
     borderLeftWidth = other.borderLeftWidth ?? borderLeftWidth;
+    borderRadius = other.borderRadius ?? borderRadius;
+    width = other.width ?? width;
+    height = other.height ?? height;
+    minHeight = other.minHeight ?? minHeight;
+    minWidth = other.minWidth ?? minWidth;
   }
 
   /// Converts to PDF TextStyle.
