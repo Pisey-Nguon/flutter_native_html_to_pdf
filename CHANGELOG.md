@@ -1,3 +1,6 @@
+## 2.0.2
+* Add support for border-radius, width, height, and min-height CSS properties#
+
 ## 2.0.1
 
 ### Bug Fixes
