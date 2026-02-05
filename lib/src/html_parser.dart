@@ -706,10 +706,14 @@ class HtmlParser {
       return child;
     }
 
+    // Make container expand to full width when background color or border is present
+    // to match browser behavior for block-level elements
+    final shouldExpandWidth = style.backgroundColor != null || 
+                              style.borderColor != null || 
+                              style.borderLeftColor != null;
+    
     return pw.Container(
-      // Make container expand to full width when background color is present
-      // to match browser behavior for block-level elements
-      width: style.backgroundColor != null ? double.infinity : null,
+      width: shouldExpandWidth ? double.infinity : null,
       padding: style.getEffectivePadding(),
       decoration: pw.BoxDecoration(
         color: style.backgroundColor,
