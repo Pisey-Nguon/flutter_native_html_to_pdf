@@ -707,7 +707,8 @@ class HtmlParser {
     }
 
     // Make container expand to full width when background color or border is present
-    // to match browser behavior for block-level elements
+    // to match browser behavior for block-level elements.
+    // Currently, CssStyle supports borderColor (all sides) and borderLeftColor (left side).
     final shouldExpandWidth = style.backgroundColor != null || 
                               style.borderColor != null || 
                               style.borderLeftColor != null;
