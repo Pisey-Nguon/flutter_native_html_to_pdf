@@ -1,3 +1,16 @@
+## 2.0.1
+
+### Bug Fixes
+* **Fixed PDF rendering width**: Block-level elements (`<div>` and `<p>`) with background colors or borders now span the full page width in generated PDFs, matching browser behavior
+  * Previously, elements with `background-color` CSS property only wrapped their content width
+  * Now containers expand to full available width when background colors or borders are present
+  * Fixes issue where yellow highlighted sections and bordered elements appeared narrow in PDFs
+
+### Tests
+* Added comprehensive test coverage for full-width background and border rendering
+
+---
+
 ## 2.0.0 - BREAKING CHANGE
 
 ### Major Changes

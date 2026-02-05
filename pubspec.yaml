@@ -1,6 +1,6 @@
 name: flutter_native_html_to_pdf
 description: A pure Dart package to convert HTML string to PDF file. Works on all platforms without native code.
-version: 2.0.0
+version: 2.0.1
 homepage: https://github.com/Pisey-Nguon
 repository: https://github.com/Pisey-Nguon/flutter_native_html_to_pdf
 
