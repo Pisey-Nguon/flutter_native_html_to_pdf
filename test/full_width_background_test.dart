@@ -1,5 +1,3 @@
-import 'dart:io';
-
 import 'package:flutter_native_html_to_pdf/flutter_native_html_to_pdf.dart';
 import 'package:test/test.dart';
 
