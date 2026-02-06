@@ -901,9 +901,11 @@ class HtmlParser {
       final rem = double.tryParse(trimmed.replaceAll('rem', ''));
       if (rem != null) return rem * 14;
     } else if (trimmed.endsWith('%')) {
-      // Percentage values are context-dependent and cannot be reliably converted
-      // to fixed dimensions at parse time. For now, ignore percentage values.
-      // TODO: Implement proper percentage support with layout context.
+      // Percentage values are relative to parent container dimensions
+      // Return as negative to indicate percentage (e.g., -50 for 50%)
+      // Caller should handle percentage values appropriately based on context
+      final percent = double.tryParse(trimmed.replaceAll('%', ''));
+      if (percent != null) return -percent; // Negative indicates percentage
       return null;
     }
 
