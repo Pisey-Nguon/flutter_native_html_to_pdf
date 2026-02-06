@@ -1,5 +1,11 @@
 ## 2.0.2
-* Add support for border-radius, width, height, and min-height CSS properties#
+* Add support for border-radius, width, height, and min-height CSS properties
+
+**Bug Fix (2.0.2 Patch):**
+* Fixed incorrect percentage value parsing in `_parseDimension` method
+  * Percentage values (e.g., `width: 70%`, `border-radius: 50%`) were being converted to incorrect fixed pixel values
+  * Now returns `null` for percentage values since they require layout context that's not available at parse time
+  * Prevents incorrect rendering of elements with percentage-based styling
 
 ## 2.0.1
 
