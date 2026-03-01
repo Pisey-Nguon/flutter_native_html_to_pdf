@@ -1,5 +1,3 @@
-import 'dart:typed_data';
-
 import 'package:flutter/services.dart';
 import 'package:flutter_native_html_to_pdf/flutter_native_html_to_pdf.dart';
 import 'package:flutter_test/flutter_test.dart';
