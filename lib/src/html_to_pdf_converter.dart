@@ -1,82 +1,85 @@
 import 'dart:io';
 import 'dart:typed_data';
 
-import 'package:pdf/pdf.dart';
-import 'package:pdf/widgets.dart' as pw;
+import 'package:flutter/services.dart';
 
-import 'html_parser.dart';
 import 'pdf_page_size.dart';
 
-/// A pure Dart implementation for converting HTML to PDF.
+/// Converts HTML content to PDF using the native platform's WebView engine.
 ///
-/// This class provides methods to convert HTML content to PDF files or bytes
-/// without requiring any native platform code or external conversion packages.
+/// On Android the HTML is rendered in an offscreen [WebView] and exported
+/// via [PrintDocumentAdapter].  On iOS a [WKWebView] renders the HTML and
+/// the PDF is produced with `WKWebView.createPDF` (iOS 14+) or
+/// `UIPrintPageRenderer` (iOS 12/13).
+///
+/// Because rendering happens inside a real browser engine, the output is
+/// pixel-perfect and supports the full range of HTML/CSS/JavaScript that the
+/// platform WebView handles — including custom fonts, flexbox, grids, images,
+/// and `@media print` rules.
 class HtmlToPdfConverter {
-  final HtmlParser _parser = HtmlParser();
+  static const MethodChannel _channel =
+      MethodChannel('flutter_native_html_to_pdf');
 
-  /// Converts HTML content to a PDF file.
+  /// Converts [html] to a PDF file saved at
+  /// `[targetDirectory]/[targetName].pdf`.
   ///
-  /// [html] - The HTML string to convert to PDF.
-  /// [targetDirectory] - The directory path where the PDF file will be saved.
-  /// [targetName] - The name of the PDF file (without extension).
-  /// [pageSize] - Optional page size configuration. Defaults to A4.
+  /// [pageSize] controls the paper dimensions; defaults to A4 when omitted.
   ///
-  /// Returns a [File] object pointing to the generated PDF file.
-  /// Throws an exception if the conversion fails.
+  /// Returns a [File] pointing to the generated PDF.
+  /// Throws a [PlatformException] on native errors.
   Future<File> convertHtmlToPdf({
     required String html,
     required String targetDirectory,
     required String targetName,
     PdfPageSize? pageSize,
   }) async {
-    final pdfBytes = await convertHtmlToPdfBytes(
-      html: html,
-      pageSize: pageSize,
+    final String? filePath = await _channel.invokeMethod<String>(
+      'convertHtmlToPdf',
+      {
+        'html': html,
+        'targetDirectory': targetDirectory,
+        'targetName': targetName,
+        if (pageSize != null) 'pageWidth': pageSize.width,
+        if (pageSize != null) 'pageHeight': pageSize.height,
+      },
     );
 
-    final filePath = '$targetDirectory/$targetName.pdf';
-    final file = File(filePath);
-
-    // Ensure directory exists
-    final directory = Directory(targetDirectory);
-    if (!await directory.exists()) {
-      await directory.create(recursive: true);
+    if (filePath == null || filePath.isEmpty) {
+      throw PlatformException(
+        code: 'NULL_RESULT',
+        message: 'Native side returned no file path.',
+      );
     }
 
-    return await file.writeAsBytes(pdfBytes);
+    return File(filePath);
   }
 
-  /// Converts HTML content to PDF bytes.
+  /// Converts [html] to PDF bytes held in memory.
   ///
-  /// [html] - The HTML string to convert to PDF.
-  /// [pageSize] - Optional page size configuration. Defaults to A4.
+  /// [pageSize] controls the paper dimensions; defaults to A4 when omitted.
   ///
-  /// Returns a [Uint8List] containing the PDF data.
-  /// Throws an exception if the conversion fails.
+  /// Returns a [Uint8List] containing the raw PDF data.
+  /// Throws a [PlatformException] on native errors.
   Future<Uint8List> convertHtmlToPdfBytes({
     required String html,
     PdfPageSize? pageSize,
   }) async {
-    final document = pw.Document();
-    final parseResult = await _parser.parseWithStyles(html);
-
-    // Use pageSize if provided, otherwise use default A4
-    final pdfPageFormat = pageSize != null
-        ? PdfPageFormat(pageSize.width, pageSize.height)
-        : PdfPageFormat.a4;
-
-    // Use body margin from CSS, or default margin if not specified
-    final pageMargin = parseResult.bodyMargin ?? const pw.EdgeInsets.all(24);
-
-    document.addPage(
-      pw.MultiPage(
-        pageFormat: pdfPageFormat,
-        margin: pageMargin,
-        maxPages: 200,
-        build: (context) => parseResult.widgets,
-      ),
+    final Uint8List? bytes = await _channel.invokeMethod<Uint8List>(
+      'convertHtmlToPdfBytes',
+      {
+        'html': html,
+        if (pageSize != null) 'pageWidth': pageSize.width,
+        if (pageSize != null) 'pageHeight': pageSize.height,
+      },
     );
 
-    return await document.save();
+    if (bytes == null) {
+      throw PlatformException(
+        code: 'NULL_RESULT',
+        message: 'Native side returned null bytes.',
+      );
+    }
+
+    return bytes;
   }
 }

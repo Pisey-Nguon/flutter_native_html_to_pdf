@@ -1,8 +1,31 @@
 import 'dart:typed_data';
+
+import 'package:flutter/services.dart';
 import 'package:flutter_native_html_to_pdf/flutter_native_html_to_pdf.dart';
-import 'package:test/test.dart';
+import 'package:flutter_test/flutter_test.dart';
+
+final Uint8List _fakePdfBytes = Uint8List.fromList(
+  '%PDF-1.4 mock pdf bytes'.codeUnits,
+);
+
+const _channel = MethodChannel('flutter_native_html_to_pdf');
 
 void main() {
+  TestWidgetsFlutterBinding.ensureInitialized();
+
+  setUp(() {
+    TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+        .setMockMethodCallHandler(_channel, (MethodCall call) async {
+      if (call.method == 'convertHtmlToPdfBytes') return _fakePdfBytes;
+      return null;
+    });
+  });
+
+  tearDown(() {
+    TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+        .setMockMethodCallHandler(_channel, null);
+  });
+
   group('Border radius and dimensions support', () {
     test('div with border-radius generates valid PDF', () async {
       const html = '''

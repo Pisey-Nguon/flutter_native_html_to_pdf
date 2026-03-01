@@ -1,6 +1,6 @@
 PODS:
   - Flutter (1.0.0)
-  - flutter_native_html_to_pdf (0.0.1):
+  - flutter_native_html_to_pdf (3.0.0):
     - Flutter
   - fluttertoast (0.0.2):
     - Flutter
@@ -36,7 +36,7 @@ EXTERNAL SOURCES:
 
 SPEC CHECKSUMS:
   Flutter: cabc95a1d2626b1b06e7179b784ebcf0c0cde467
-  flutter_native_html_to_pdf: ef573fcf0966fb11a557d8f0ea8ecf109f7e207a
+  flutter_native_html_to_pdf: bc36c5db34d51b05ba5d1e4581a16d51e6a79fef
   fluttertoast: 2c67e14dce98bbdb200df9e1acf610d7a6264ea1
   integration_test: 4a889634ef21a45d28d50d622cf412dc6d9f586e
   path_provider_foundation: bb55f6dbba17d0dccd6737fe6f7f34fbd0376880
