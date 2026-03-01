@@ -1,22 +1,23 @@
 # Flutter Native HTML to PDF
 
-A pure Dart package for converting HTML content into PDF files or PDF bytes. Works on all platforms without requiring any native code.
+A Flutter plugin that uses native WebView (Android WebView / iOS WKWebView) to render HTML and convert it to high-quality PDF files. Leverages native platform capabilities for accurate HTML rendering with full CSS support.
 
 ## Features
 
-- **Pure Dart Implementation**: No native code required - works everywhere Dart runs
+- **Native WebView Rendering**: Uses Android WebView and iOS WKWebView for accurate HTML-to-PDF conversion
+- **Full CSS Support**: Complete support for modern CSS properties, layouts, fonts, and styling
 - **HTML to PDF File Conversion**: Convert HTML content into a PDF file and save it to a specified directory
 - **HTML to PDF Bytes Conversion**: Convert HTML content directly to `Uint8List` PDF data without saving to a file
 - **Customizable Page Sizes**: Support for A4, Letter, Legal, A3, A5, B5, Executive, Tabloid, and custom page sizes
-- **Cross-platform Support**: Works on Android, iOS, Windows, Linux, macOS, and web
+- **High-Quality Output**: Native rendering ensures professional-quality PDFs with accurate layout
 
 ## Installation
 
 Add this to your package's `pubspec.yaml` file:
 
-```yaml
 dependencies:
-  flutter_native_html_to_pdf: ^2.0.0
+```yaml
+  flutter_native_html_to_pdf: ^3.0.0
 ```
 
 ## Usage
@@ -136,44 +137,36 @@ final portraitA4 = PdfPageSize.a4.portrait;
 
 **Note:** If no page size is specified, the default is A4.
 
-## Migration from v1.x
+## Migration from v1.x and v2.x
 
-If you're upgrading from version 1.x, update your code as follows:
+If you're upgrading from version 1.x or 2.x, the API remains the same:
 
 ```dart
 // Old (v1.x)
 final plugin = FlutterNativeHtmlToPdf();
 final pdfFile = await plugin.convertHtmlToPdf(...);
 
-// New (v2.x)
+// New (v2.x and v3.x)
 final converter = HtmlToPdfConverter();
 final pdfFile = await converter.convertHtmlToPdf(...);
 ```
 
-The old `FlutterNativeHtmlToPdf` class is still available but deprecated for backward compatibility.
+**Note:** Version 3.0.0 uses native platform code (WebView) for better rendering quality compared to the pure Dart implementation in v2.x.
 
-## Benefits of Pure Dart Implementation
+## Benefits of Native WebView Implementation
 
-- **No Native Code**: Works on all platforms without platform-specific setup
-- **Simpler Integration**: No need for method channels or platform-specific configurations
-- **Consistent Behavior**: Same rendering across all platforms
-- **Lightweight**: Minimal dependencies
-
-## Dependencies
-
-This package uses only pure Dart packages:
-- [pdf](https://pub.dev/packages/pdf) - For PDF document generation
-- [html](https://pub.dev/packages/html) - For HTML parsing
-- [http](https://pub.dev/packages/http) - For loading remote images
+- **Accurate Rendering**: Native WebView provides the same rendering quality as a web browser
+- **Full CSS Support**: Complete support for modern CSS3 properties, flexbox, grid, and custom fonts
+- **Better Performance**: Optimized native rendering engine
+- **Professional Output**: High-quality PDFs suitable for production use
+- **Web Standards**: Full compatibility with HTML5 and CSS3 standards
 
 ## Platform Support
 
-- ✅ Android
-- ✅ iOS
-- ✅ Windows
-- ✅ Linux
-- ✅ macOS
-- ✅ Web
+- ✅ Android (uses Android WebView)
+- ✅ iOS (uses WKWebView)
+
+**Note:** This version requires native platform support and currently works on Android and iOS.
 
 ## Note
 
@@ -181,11 +174,12 @@ The HTML content can be static or dynamic. You can use any valid HTML, including
 
 ### CSS Styles and Fonts
 
-This plugin fully supports CSS styling in your HTML content on both Android and iOS:
-- **Colors**: Background colors, text colors, border colors
-- **Fonts**: Font families, sizes, weights, and styles (bold, italic, etc.)
-- **Layout**: Margins, padding, borders, positioning
-- **All standard CSS properties**
+This plugin fully supports CSS styling through native WebView rendering on both Android and iOS:
+- **Colors**: Background colors, text colors, border colors, gradients
+- **Fonts**: Font families, sizes, weights, styles (bold, italic, etc.), custom web fonts
+- **Layout**: Margins, padding, borders, flexbox, grid, positioning
+- **Modern CSS**: CSS3 properties, animations (static in PDF), transforms, shadows
+- **All standard CSS properties**: Native WebView ensures complete CSS compatibility
 
 **Example HTML with CSS:**
 
@@ -276,8 +270,8 @@ const htmlContent = """
 """;
 ```
 
-**Note:** The plugin automatically waits for images to load before generating the PDF. For optimal results with external images:
+**Note:** The native WebView automatically waits for images to load before generating the PDF. For optimal results with external images:
 - Ensure you have a stable internet connection
-- The plugin uses JavaScript to detect when all images have finished loading (either successfully or with errors)
-- Only a minimal 300ms delay is added after image loading for final rendering
+- The plugin uses native WebView callbacks to detect when all images have finished loading
+- WebView rendering ensures accurate image placement and sizing
 - For faster generation, consider using base64 encoded images or local assets
