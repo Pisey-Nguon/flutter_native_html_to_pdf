@@ -1,7 +1,15 @@
-/// A pure Dart library for converting HTML to PDF.
+/// A Flutter plugin for converting HTML to PDF using native WebView rendering.
 ///
-/// This library provides a simple API to convert HTML content to PDF files
-/// or PDF bytes without requiring any native platform code.
+/// On **Android**, the HTML is loaded into an offscreen [WebView] and exported
+/// to PDF via the Android print framework (`PrintDocumentAdapter`).
+/// On **iOS**, the HTML is loaded into a [WKWebView] and the PDF data is
+/// produced with `WKWebView.createPDF` (iOS 14+) or `UIPrintPageRenderer`
+/// (iOS 12–13).
+///
+/// Because native WebView engines do the rendering, the output faithfully
+/// reproduces the full range of HTML/CSS/JavaScript supported by the platform,
+/// including custom fonts, flexbox, CSS Grid, images, `@media print` rules,
+/// and more.
 ///
 /// ## Usage
 ///
@@ -27,7 +35,6 @@ library;
 
 export 'src/html_to_pdf_converter.dart';
 export 'src/pdf_page_size.dart';
-export 'src/html_parser.dart' show HtmlParseResult, HtmlParser, CssStyle;
 
 // For backward compatibility, also export the main class with the old name
 import 'dart:io';

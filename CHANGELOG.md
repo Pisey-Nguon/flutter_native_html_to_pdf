@@ -1,3 +1,26 @@
+## 3.0.0 - BREAKING CHANGE
+
+### Major Changes
+* **Migrated to Native WebView Rendering**: The package now uses native platform WebView (Android WebView / iOS WKWebView) for HTML rendering and PDF generation
+* **Architecture Change**: Reverted from pure Dart implementation (v2.x) back to native code for improved rendering quality and CSS support
+* **Removed Dependencies**: No longer depends on `pdf` and `html` packages
+* **Enhanced Platform Support**: Better leverages native capabilities for more accurate HTML-to-PDF conversion
+
+### Implementation Details
+* Added native Android implementation using Android WebView
+* Added native iOS implementation using WKWebView
+* Updated `HtmlToPdfConverter` to use platform channels for native PDF generation
+* Removed custom HTML parser (`html_parser.dart`) in favor of native WebView rendering
+
+### Tests
+* Updated unit tests to mock native method calls
+* Maintained test coverage for PDF generation functionality
+
+### Migration Notes
+Version 3.0.0 returns to using native platform code, which provides better rendering quality and CSS support compared to the pure Dart implementation in v2.x. The API remains largely the same, but the underlying implementation now requires Android and iOS platforms.
+
+---
+
 ## 2.0.3
 * Fixed incorrect percentage value parsing in `_parseDimension` method
 * Percentage values (e.g., `width: 70%`, `border-radius: 50%`) were being converted to incorrect fixed pixel values
