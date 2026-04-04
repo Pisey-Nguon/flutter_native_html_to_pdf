@@ -1,3 +1,7 @@
+## 3.0.1
+* Update macOS and iOS configurations, remove unused dependencies, and add generated files
+* Fix iOS PDF background color rendering by injecting print-color-adjust CSS
+
 ## 3.0.0 - BREAKING CHANGE
 
 ### Major Changes
