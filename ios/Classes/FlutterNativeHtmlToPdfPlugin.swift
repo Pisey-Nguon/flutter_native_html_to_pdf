@@ -169,8 +169,26 @@ private class HtmlToPdfConverter: NSObject, WKNavigationDelegate {
             let h = CGFloat(pageHeight ?? 841.8)
             let conv = HtmlToPdfConverter(pdfPageWidth: w, pdfPageHeight: h, completion: completion)
             instances.insert(conv)
-            conv.webView.loadHTMLString(html, baseURL: nil)
+            conv.webView.loadHTMLString(Self.injectPrintColorAdjust(into: html), baseURL: nil)
         }
+    }
+
+    /// Injects a `<style>` block that forces WebKit to render background colors
+    /// and images when printing (i.e. when generating a PDF with
+    /// UIPrintPageRenderer).  By default iOS suppresses backgrounds in print
+    /// mode; `print-color-adjust: exact` overrides that behavior.
+    private static func injectPrintColorAdjust(into html: String) -> String {
+        let style = "<style>* { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }</style>"
+        // Insert before </head> when present (preferred location).
+        if let range = html.range(of: "</head>", options: .caseInsensitive) {
+            return html.replacingCharacters(in: range, with: style + "</head>")
+        }
+        // Insert after <head> when there is no closing tag.
+        if let range = html.range(of: "<head>", options: .caseInsensitive) {
+            return html.replacingCharacters(in: range, with: "<head>" + style)
+        }
+        // No <head> at all – prepend the style.
+        return style + html
     }
 
     // -------------------------------------------------------------------------
