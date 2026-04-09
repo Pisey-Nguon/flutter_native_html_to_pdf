@@ -106,6 +106,9 @@ private class HtmlToPdfConverter: NSObject, WKNavigationDelegate {
     private let completion:    (Data?) -> Void
     private var completed = false
 
+    // Collected link annotations: one entry per visual rect of each <a href>.
+    private var linkAnnotations: [(url: URL, pageIndex: Int, rectInPage: CGRect)] = []
+
     // -------------------------------------------------------------------------
     // Init – create the WKWebView inside an offscreen UIWindow
     // The window is placed far off-screen so it is invisible but still
@@ -217,9 +220,13 @@ private class HtmlToPdfConverter: NSObject, WKNavigationDelegate {
                 height: newHeight
             )
 
-            // 3. Give the engine one runloop pass to reflow, then export.
+            // 3. Give the engine one runloop pass to reflow, then extract link
+            //    annotations and export.
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) { [weak self] in
-                self?.exportPDF()
+                guard let self = self else { return }
+                self.extractLinks { [weak self] in
+                    self?.exportPDF()
+                }
             }
         }
     }
@@ -244,6 +251,97 @@ private class HtmlToPdfConverter: NSObject, WKNavigationDelegate {
     // PDF export – UIPrintPageRenderer (works on all supported iOS versions
     // and produces a properly paginated, print-quality PDF).
     // -------------------------------------------------------------------------
+
+    /// Queries the rendered WebView for all <a href> elements and converts their
+    /// bounding rects from CSS pixels to PDF points, storing the results in
+    /// `linkAnnotations` for use during PDF generation.
+    ///
+    /// NOTE: ctx.setURL(_:for:) operates in the raw PDF coordinate space
+    /// (origin bottom-left), NOT in the UIKit-flipped space used for drawing.
+    /// Rects are stored in UIKit space and flipped at annotation-write time.
+    private func extractLinks(completion: @escaping () -> Void) {
+        // getClientRects() returns one rect per line fragment for inline elements.
+        // Block-level anchors (e.g. <a><div>…</div></a>) return an empty list, so
+        // we fall back to getBoundingClientRect() in that case.
+        // pageYOffset converts viewport-relative rects to document-absolute.
+        let js = """
+        (function() {
+            var scrollTop = window.pageYOffset
+                || document.documentElement.scrollTop
+                || document.body.scrollTop
+                || 0;
+            var links = [];
+            var anchors = document.querySelectorAll('a[href]');
+            for (var i = 0; i < anchors.length; i++) {
+                var a = anchors[i];
+                var href = a.href;
+                if (!href || href.indexOf('javascript:') === 0) continue;
+                var rects = Array.from(a.getClientRects());
+                if (rects.length === 0) {
+                    var br = a.getBoundingClientRect();
+                    if (br.width > 0 && br.height > 0) rects = [br];
+                }
+                for (var j = 0; j < rects.length; j++) {
+                    var r = rects[j];
+                    if (r.width > 0 && r.height > 0) {
+                        links.push({
+                            href: href,
+                            x: r.left,
+                            y: r.top + scrollTop,
+                            w: r.width,
+                            h: r.height
+                        });
+                    }
+                }
+            }
+            return JSON.stringify(links);
+        })()
+        """
+
+        webView.evaluateJavaScript(js) { [weak self] value, _ in
+            defer { completion() }
+            guard let self = self,
+                  let jsonString = value as? String,
+                  let jsonData   = jsonString.data(using: .utf8),
+                  let rawLinks   = try? JSONSerialization.jsonObject(with: jsonData)
+                                       as? [[String: Any]]
+            else { return }
+
+            // CSS px → PDF pt:  1 pt = (96/72) px  →  scale = 72/96
+            let scale: CGFloat = 72.0 / 96.0
+
+            for link in rawLinks {
+                guard let hrefStr = link["href"] as? String,
+                      let url     = URL(string: hrefStr),
+                      let xRaw    = link["x"] as? Double,
+                      let yRaw    = link["y"] as? Double,
+                      let wRaw    = link["w"] as? Double,
+                      let hRaw    = link["h"] as? Double
+                else { continue }
+
+                let xPdf = CGFloat(xRaw) * scale
+                let yPdf = CGFloat(yRaw) * scale
+                let wPdf = CGFloat(wRaw) * scale
+                let hPdf = CGFloat(hRaw) * scale
+
+                // Which page does this rect start on?
+                let pageIndex = Int(yPdf / self.pdfPageHeight)
+                // y from the top of that page (UIKit / PDF upper-left origin).
+                let yOnPage   = yPdf - CGFloat(pageIndex) * self.pdfPageHeight
+
+                // Clamp to the page height so the annotation rect stays within
+                // the page even if the link straddles a page break.
+                let clampedH  = min(hPdf, self.pdfPageHeight - yOnPage)
+                guard clampedH > 0 else { continue }
+
+                let rectInPage = CGRect(x: xPdf, y: yOnPage, width: wPdf, height: clampedH)
+                self.linkAnnotations.append(
+                    (url: url, pageIndex: pageIndex, rectInPage: rectInPage)
+                )
+            }
+        }
+    }
+
     private func exportPDF() {
         let paperRect     = CGRect(x: 0, y: 0, width: pdfPageWidth, height: pdfPageHeight)
         let printableRect = paperRect   // no extra margins; caller controls via HTML/CSS
@@ -262,6 +360,24 @@ private class HtmlToPdfConverter: NSObject, WKNavigationDelegate {
         for i in 0 ..< renderer.numberOfPages {
             UIGraphicsBeginPDFPage()
             renderer.drawPage(at: i, in: UIGraphicsGetPDFContextBounds())
+
+            // Overlay PDF URI annotations for every hyperlink on this page.
+            // ctx.setURL(_:for:) writes into the raw PDF coordinate space
+            // (origin bottom-left, y increases upward), regardless of the UIKit
+            // flip transform applied for drawing.  Convert from UIKit rect
+            // (origin top-left) by flipping: pdfY = pageHeight - uikitMaxY.
+            if let ctx = UIGraphicsGetCurrentContext() {
+                for annotation in linkAnnotations where annotation.pageIndex == i {
+                    let r = annotation.rectInPage
+                    let flipped = CGRect(
+                        x: r.minX,
+                        y: pdfPageHeight - r.maxY,
+                        width: r.width,
+                        height: r.height
+                    )
+                    ctx.setURL(annotation.url as CFURL, for: flipped)
+                }
+            }
         }
         UIGraphicsEndPDFContext()
 

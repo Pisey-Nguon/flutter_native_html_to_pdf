@@ -1,3 +1,7 @@
+## 3.0.2
+* Fix iOS: hyperlinks in generated PDFs are now clickable and open the URL in the browser
+* Supports all anchor types — plain text links, image links, and links wrapping any HTML element
+
 ## 3.0.1
 * Update macOS and iOS configurations, remove unused dependencies, and add generated files
 * Fix iOS PDF background color rendering by injecting print-color-adjust CSS
