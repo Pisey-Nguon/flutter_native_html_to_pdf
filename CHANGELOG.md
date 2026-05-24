@@ -1,3 +1,8 @@
+## 3.1.0
+* Add iOS Swift Package Manager support by introducing an SPM package at `ios/flutter_native_html_to_pdf`
+* Move iOS plugin Swift sources from `ios/Classes` to `ios/flutter_native_html_to_pdf/Sources/flutter_native_html_to_pdf`
+* Keep CocoaPods support by updating podspec source paths to the new location
+
 ## 3.0.2
 * Fix iOS: hyperlinks in generated PDFs are now clickable and open the URL in the browser
 * Supports all anchor types — plain text links, image links, and links wrapping any HTML element
