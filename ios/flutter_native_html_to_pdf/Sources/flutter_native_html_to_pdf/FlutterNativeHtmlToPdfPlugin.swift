@@ -354,34 +354,48 @@ private class HtmlToPdfConverter: NSObject, WKNavigationDelegate {
         renderer.setValue(NSValue(cgRect: paperRect),     forKey: "paperRect")
         renderer.setValue(NSValue(cgRect: printableRect), forKey: "printableRect")
 
-        let pdfData = NSMutableData()
-        UIGraphicsBeginPDFContextToData(pdfData, paperRect, nil)
-        renderer.prepare(forDrawingPages: NSRange(location: 0, length: renderer.numberOfPages))
-        for i in 0 ..< renderer.numberOfPages {
-            UIGraphicsBeginPDFPage()
-            renderer.drawPage(at: i, in: UIGraphicsGetPDFContextBounds())
+        let render = { [self] in
+            let pdfData = NSMutableData()
+            UIGraphicsBeginPDFContextToData(pdfData, paperRect, nil)
+            let pageCount = renderer.numberOfPages
+            renderer.prepare(forDrawingPages: NSRange(location: 0, length: pageCount))
+            for i in 0 ..< pageCount {
+                UIGraphicsBeginPDFPage()
+                renderer.drawPage(at: i, in: UIGraphicsGetPDFContextBounds())
 
-            // Overlay PDF URI annotations for every hyperlink on this page.
-            // ctx.setURL(_:for:) writes into the raw PDF coordinate space
-            // (origin bottom-left, y increases upward), regardless of the UIKit
-            // flip transform applied for drawing.  Convert from UIKit rect
-            // (origin top-left) by flipping: pdfY = pageHeight - uikitMaxY.
-            if let ctx = UIGraphicsGetCurrentContext() {
-                for annotation in linkAnnotations where annotation.pageIndex == i {
-                    let r = annotation.rectInPage
-                    let flipped = CGRect(
-                        x: r.minX,
-                        y: pdfPageHeight - r.maxY,
-                        width: r.width,
-                        height: r.height
-                    )
-                    ctx.setURL(annotation.url as CFURL, for: flipped)
+                // Overlay PDF URI annotations for every hyperlink on this page.
+                // ctx.setURL(_:for:) writes into the raw PDF coordinate space
+                // (origin bottom-left, y increases upward), regardless of the UIKit
+                // flip transform applied for drawing.  Convert from UIKit rect
+                // (origin top-left) by flipping: pdfY = pageHeight - uikitMaxY.
+                if let ctx = UIGraphicsGetCurrentContext() {
+                    for annotation in linkAnnotations where annotation.pageIndex == i {
+                        let r = annotation.rectInPage
+                        let flipped = CGRect(
+                            x: r.minX,
+                            y: pdfPageHeight - r.maxY,
+                            width: r.width,
+                            height: r.height
+                        )
+                        ctx.setURL(annotation.url as CFURL, for: flipped)
+                    }
                 }
             }
-        }
-        UIGraphicsEndPDFContext()
+            UIGraphicsEndPDFContext()
 
-        finish(pdfData.length > 0 ? (pdfData as Data) : nil)
+            let data = pdfData.length > 0 ? (pdfData as Data) : nil
+            DispatchQueue.main.async {
+                self.finish(data)
+            }
+        }
+
+        // WebKit can paginate asynchronously when printing off the main thread.
+        // Respect the formatter's contract; older iOS versions keep the existing path.
+        if #available(iOS 16.0, *), !formatter.requiresMainThread {
+            DispatchQueue.global(qos: .userInitiated).async(execute: render)
+        } else {
+            render()
+        }
     }
 
     // -------------------------------------------------------------------------
